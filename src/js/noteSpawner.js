@@ -9,8 +9,9 @@ export default class NoteSpawner {
         this.activeNotes = []; // Notas que estão na tela
         
         // --- CONFIGURAÇÕES ---
-        this.noteSpeed = 1.3; // Velocidade (Menor = Mais rápido). 1.3 é um bom ritmo.
-        this.hitWindow = 0.15; // Tolerância de erro (150ms)
+        this.noteSpeed = 1.3; 
+        this.hitWindow = 0.25; // Aumentei de 0.15 para 0.25 (250ms - Bem fácil de acertar)
+        this.perfectWindow = 0.08; // Aumentei de 0.05 para 0.08 (80ms - Perfect mais fácil)
         
         // --- OBJECT POOLING (Performance) ---
         this.notePool = []; 
@@ -149,10 +150,9 @@ async start() {
         this.activeNotes.push({ el, data: noteData });
     }
 
-    checkHit(laneIndex) {
+        checkHit(laneIndex) {
         const currentTime = AudioEngine.bgmAudio.currentTime;
 
-        // Procura nota na lane correta dentro da janela de tempo
         const noteIndex = this.activeNotes.findIndex(n => 
             n.data.lane === laneIndex && 
             Math.abs(n.data.time - currentTime) <= this.hitWindow
@@ -162,24 +162,21 @@ async start() {
             const note = this.activeNotes[noteIndex];
             note.data.hit = true;
             
-            // Visual Hit
             note.el.classList.add('note-hit');
             this.activeNotes.splice(noteIndex, 1);
-            
-            // Devolve pro pool rápido
             setTimeout(() => this.returnNoteToPool(note.el), 100);
             
-            // Calcula Pontos e Feedback
+            // Calcula Pontos
             const diff = Math.abs(note.data.time - currentTime);
             let scoreType = 'GOOD';
             let points = 50;
 
-            if (diff < 0.05) { // 50ms para Perfect
+            // Usa a nova variável perfectWindow
+            if (diff < this.perfectWindow) { 
                 scoreType = 'PERFECT';
                 points = 100;
             }
 
-            // Chama o feedback na tela
             this.game.showFeedback(scoreType);
             this.game.updateScore(points, scoreType);
             
