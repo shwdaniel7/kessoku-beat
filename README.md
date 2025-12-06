@@ -15,7 +15,7 @@ architecture, performance, and visual polish.
 
   
 
-![Project Status](https://img.shields.io/badge/Status-Version_1.0-pink)
+![Project Status](https://img.shields.io/badge/Status-Version_v1.1.0-pink)
 
 ![Tech](https://img.shields.io/badge/Tech-HTML5_%7C_CSS3_%7C_ES6+-blue)
 
