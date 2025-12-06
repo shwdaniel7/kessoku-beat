@@ -178,73 +178,93 @@
     text-shadow: 0 0 50px var(--color-bocchi);
 }
 
-/* --- SISTEMA DE FEEDBACK VISUAL --- */
+/* --- SISTEMA DE FEEDBACK VISUAL (V1.1) --- */
 
 #feedback-container {
     position: absolute;
-    top: 40%; /* Fica no meio da tela, acima da pista */
+    top: 35%; /* Subi um pouco para não tampar as notas */
     left: 50%;
     transform: translate(-50%, -50%);
     z-index: 300;
     pointer-events: none;
     text-align: center;
     width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
 }
 
 .feedback-text {
     font-family: var(--font-display);
-    font-size: 4rem;
+    font-size: 5rem; /* Maior */
     font-weight: 900;
     font-style: italic;
     text-transform: uppercase;
-    animation: feedbackPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
     opacity: 0;
+    /* Stroke (borda) no texto para leitura melhor */
+    -webkit-text-stroke: 2px rgba(0,0,0,0.5);
 }
 
-/* Animação de "Pulo" */
+/* Animação mais explosiva */
+.feedback-text {
+    animation: feedbackPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
 @keyframes feedbackPop {
-    0% { transform: scale(0.5) translateY(20px); opacity: 0; }
-    50% { transform: scale(1.2) translateY(-10px); opacity: 1; }
-    100% { transform: scale(1) translateY(0); opacity: 0; } /* Some no final */
+    0% { transform: scale(0.5) rotate(-10deg); opacity: 0; }
+    40% { transform: scale(1.3) rotate(0deg); opacity: 1; }
+    100% { transform: scale(1) translateY(-20px); opacity: 0; }
 }
 
-/* Estilos Específicos */
-
-/* PERFECT - Rosa/Dourado Brilhante */
+/* PERFECT - Dourado/Rosa Neon */
 .feedback-text.perfect {
-    color: #fff;
-    text-shadow: 
-        0 0 10px var(--color-bocchi),
-        0 0 20px var(--color-bocchi),
-        0 0 40px #fff;
-    background: -webkit-linear-gradient(#fff, var(--color-bocchi));
+    background: linear-gradient(to bottom, #fff 0%, var(--color-bocchi) 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-    filter: drop-shadow(0 0 5px rgba(255,255,255,0.5));
+    filter: drop-shadow(0 0 10px var(--color-bocchi)) drop-shadow(0 0 30px var(--color-bocchi));
+    z-index: 302;
 }
 
-/* GOOD - Azul/Verde (Nijika/Ryo) */
+/* GOOD - Azul Neon */
 .feedback-text.good {
-    color: var(--color-nijika);
-    text-shadow: 0 0 15px var(--color-nijika);
-    font-size: 3rem; /* Um pouco menor que perfect */
+    color: var(--color-ryo);
+    -webkit-text-fill-color: var(--color-ryo);
+    text-shadow: 0 0 20px var(--color-ryo);
+    font-size: 3.5rem;
+    z-index: 301;
 }
 
-/* MISS - Cinza/Vermelho Tremido */
 .feedback-text.miss {
-    color: #888;
-    text-shadow: 0 0 5px red;
-    font-size: 2.5rem;
-    animation: feedbackShake 0.3s forwards;
+    color: #ff3333;
+    -webkit-text-fill-color: #ff3333; /* Garante vermelho sólido */
+    text-shadow: 0 0 20px red;
+    font-size: 4rem; /* Bem grande */
+    opacity: 1 !important; /* FORÇA A VISIBILIDADE */
+    animation: feedbackMiss 0.5s forwards; /* Nova animação específica */
 }
 
-@keyframes feedbackShake {
-    0% { transform: translateX(0); opacity: 1; }
-    25% { transform: translateX(-10px); }
-    50% { transform: translateX(10px); }
-    75% { transform: translateX(-10px); }
-    100% { transform: translateX(0); opacity: 0; }
+/* Nova animação: Cai um pouco e treme */
+@keyframes feedbackMiss {
+    0% { transform: scale(1.5) rotate(0deg); opacity: 1; }
+    20% { transform: scale(1) rotate(-10deg); }
+    40% { transform: scale(1) rotate(10deg); }
+    60% { transform: scale(1) rotate(-10deg); opacity: 1; }
+    100% { transform: scale(0.8) translateY(50px) rotate(0deg); opacity: 0; }
 }
+
+/* Animação do Combo (Pulsar) */
+.combo-pulse {
+    animation: comboBump 0.1s ease-out;
+    color: var(--color-nijika) !important;
+}
+
+@keyframes comboBump {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.3); text-shadow: 0 0 20px white; }
+    100% { transform: scale(1); }
+}
+
 
 /* =========================================
    LOW SPEC MODE (MODO LEVE / 2D)

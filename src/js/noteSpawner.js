@@ -185,18 +185,21 @@ async start() {
         return false;
     }
 
-    handleMiss(index) {
+handleMiss(index) {
         const note = this.activeNotes[index];
         
-        // Visual Miss
+        // Visual Miss na nota (fica cinza)
         note.el.classList.add('note-miss');
+        
+        // Remove da lógica
         this.activeNotes.splice(index, 1);
         
-        // Devolve pro pool um pouco mais devagar pra ver o erro
+        // Devolve pro pool
         setTimeout(() => this.returnNoteToPool(note.el), 200);
 
-        // Chama o feedback na tela
-        this.game.showFeedback('MISS');
+        this.game.showFeedback('MISS'); 
+        
+        // Atualiza pontuação (reseta combo)
         this.game.updateScore(0, 'MISS');
     }
 

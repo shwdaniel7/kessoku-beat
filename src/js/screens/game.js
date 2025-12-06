@@ -129,18 +129,24 @@ export default class GameScreen {
     }
 
     updateScore(points, type) {
+        const comboEl = document.getElementById('combo-val');
+
         if (type === 'MISS') {
             this.combo = 0;
-            const comboEl = document.getElementById('combo-val');
-            comboEl.style.color = '#555'; // Combo fica cinza
-            setTimeout(() => comboEl.style.color = 'var(--color-nijika)', 200);
+            comboEl.style.color = '#555';
+            comboEl.classList.remove('combo-pulse'); // Remove animação se errar
         } else {
-            this.score += points + (this.combo * 10); // Bônus de combo
+            this.score += points + (this.combo * 10);
             this.combo++;
+            
+            // Efeito de Pulo no Combo
+            comboEl.classList.remove('combo-pulse'); // Reseta
+            void comboEl.offsetWidth; // Força o navegador a recalcular (hack para reiniciar animação CSS)
+            comboEl.classList.add('combo-pulse'); // Adiciona de novo
         }
         
         document.getElementById('score-val').innerText = this.score;
-        document.getElementById('combo-val').innerText = this.combo;
+        comboEl.innerText = this.combo;
     }
 
     endGame() {
