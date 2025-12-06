@@ -15,7 +15,7 @@ architecture, performance, and visual polish.
 
   
 
-![Project Status](https://img.shields.io/badge/Status-Version_v1.2.0-pink)
+![Project Status](https://img.shields.io/badge/Status-Version_v1.4.0-pink)
 
 ![Tech](https://img.shields.io/badge/Tech-HTML5_%7C_CSS3_%7C_ES6+-blue)
 
@@ -28,6 +28,13 @@ architecture, performance, and visual polish.
   
 
 ## ✨ Features
+
+### 🆕 New in v1.4.0
+- **Variable Scroll Speed:** Each chart now has a specific note speed (e.g., Hard charts scroll faster than Easy ones).
+- **Smart Audio Offset:** Implemented a hybrid timing system that allows notes to spawn *before* the music starts (Pre-roll), ensuring perfect sync even for songs that start immediately.
+- **Pause Menu:** Press `ESC` to pause, resume, retry, or quit.
+- **Hit Sounds:** Added satisfying feedback sounds when hitting notes.
+- **Expanded Song List:** Added slots for new tracks and a carousel navigation system.
 
 ### 🆕 New in v1.3.0
 - **Hold Notes:** Added support for long notes. Players must hold the key and release it at the right time.

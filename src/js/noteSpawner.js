@@ -1,23 +1,27 @@
 import AudioEngine from './audioEngine.js';
 
 export default class NoteSpawner {
-    constructor(chartId, gameInstance) {
+    constructor(chartId, gameInstance, speed) {
         this.chartId = chartId;
         this.game = gameInstance;
         
         this.chartNotes = [];
         this.activeNotes = [];
         
-        // --- CONFIGURAÇÕES DE BALANCEAMENTO ---
-        this.noteSpeed = 1.3; 
-        this.hitWindow = 0.15; // 150ms (Padrão Rhythm Game)
-        this.perfectWindow = 0.05; // 50ms (Exige precisão)
+        this.noteSpeed = speed || 1.3; 
+        this.hitWindow = 0.15;
+        this.perfectWindow = 0.05;
         
-        // --- POOLING ---
         this.notePool = []; 
         this.poolSize = 50;
         
         this.isPlaying = false;
+        
+        // Variáveis para o Delay Inicial
+        this.audioDelay = 0;     // Quanto tempo esperar (vem do JSON offset)
+        this.startTime = 0;      // Quando o jogo começou visualmente
+        this.audioStarted = false; // Se a música já começou
+        this.audioPath = '';     // Caminho do arquivo de som
 
         const trackEl = document.querySelector('.track-container');
         this.trackHeight = trackEl ? trackEl.offsetHeight : window.innerHeight; 
@@ -45,32 +49,40 @@ export default class NoteSpawner {
 
     returnNoteToPool(el) {
         el.className = 'note'; 
-        
-        // Limpa cauda se tiver
         const tail = el.querySelector('.note-hold-body');
         if (tail) tail.remove();
-
         el.style.visibility = 'hidden';
         el.style.transform = 'translate3d(0, -200px, 0)';
-        
         if (el.parentNode) el.parentNode.removeChild(el);
         this.notePool.push(el);
     }
 
-    async start() {
+    // --- MUDANÇA: Recebe o caminho do áudio para tocar depois ---
+    async start(audioPath) {
+        this.audioPath = audioPath;
         const path = `./assets/charts/${this.chartId}.json`;
+        
         try {
             const response = await fetch(path);
             if (!response.ok) throw new Error("Chart não encontrado");
             
             const data = await response.json();
             
+            // Pega o offset do JSON (se não tiver, usa 0)
+            this.audioDelay = data.offset || 0;
+
             this.chartNotes = data.notes.map(n => ({
                 ...n,
-                spawnTime: n.time - this.noteSpeed,
+                // AQUI É O TRUQUE: Somamos o delay ao tempo da nota
+                // Se a nota é em 0.5s e delay é 2.0s, ela vira 2.5s
+                realTime: n.time + this.audioDelay, 
+                
+                // SpawnTime considera a velocidade de queda
+                spawnTime: (n.time + this.audioDelay) - this.noteSpeed,
+                
                 hit: false,
                 isHolding: false,
-                endTime: n.duration ? n.time + n.duration : n.time
+                endTime: n.duration ? (n.time + this.audioDelay) + n.duration : (n.time + this.audioDelay)
             })).sort((a, b) => a.spawnTime - b.spawnTime);
 
             // Calcula fim do jogo
@@ -81,8 +93,12 @@ export default class NoteSpawner {
                 this.endTime = 10.0;
             }
 
+            // Inicia o relógio visual
+            this.startTime = performance.now();
+            this.audioStarted = false;
             this.isPlaying = true;
             this.loop();
+            
         } catch (e) {
             console.error("Erro chart:", e);
             this.game.endGame();
@@ -92,11 +108,35 @@ export default class NoteSpawner {
     loop() {
         if (!this.isPlaying) return;
 
-        const currentTime = AudioEngine.bgmAudio ? AudioEngine.bgmAudio.currentTime : 0;
-        const audioEnded = AudioEngine.bgmAudio ? AudioEngine.bgmAudio.ended : false;
+        // --- LÓGICA HÍBRIDA DE TEMPO ---
+        let currentTime;
+
+        if (!this.audioStarted) {
+            // Se a música ainda não começou, usamos o relógio do sistema
+            const rawTime = (performance.now() - this.startTime) / 1000;
+            
+            // Verifica se já deu o tempo do delay
+            if (rawTime >= this.audioDelay) {
+                // HORA DE TOCAR A MÚSICA!
+                console.log("🎧 Iniciando Áudio Sincronizado!");
+                AudioEngine.playBGM(this.audioPath, false);
+                this.audioStarted = true;
+                
+                // Pequeno ajuste para evitar pulo visual na troca de relógio
+                currentTime = this.audioDelay + AudioEngine.bgmAudio.currentTime;
+            } else {
+                // Ainda estamos no silêncio (Pre-roll)
+                currentTime = rawTime;
+            }
+        } else {
+            // Música tocando: O mestre é o AudioEngine (mais preciso)
+            // Somamos o delay porque as notas foram empurradas pra frente
+            currentTime = this.audioDelay + AudioEngine.bgmAudio.currentTime;
+        }
 
         // Verifica Fim de Jogo
-        if ((currentTime > this.endTime || audioEnded) && this.activeNotes.length === 0) {
+        const audioEnded = AudioEngine.bgmAudio ? AudioEngine.bgmAudio.ended : false;
+        if ((currentTime > this.endTime || (this.audioStarted && audioEnded)) && this.activeNotes.length === 0) {
             this.stop();
             this.game.endGame();
             return;
@@ -108,37 +148,37 @@ export default class NoteSpawner {
             this.spawnNote(noteData);
         }
 
-        // 2. MOVER E PROCESSAR
+        // 2. MOVER
         for (let i = this.activeNotes.length - 1; i >= 0; i--) {
             const noteObj = this.activeNotes[i];
             
-            // --- LÓGICA DE HOLD (SEGURANDO) ---
+            // Usa realTime (que já tem o offset somado)
+            const targetTime = noteObj.data.realTime; 
+
             if (noteObj.data.isHolding) {
-                if (currentTime >= noteObj.data.endTime) {
+                // Lógica de Hold
+                const noteEndTime = noteObj.data.endTime;
+                
+                if (currentTime >= noteEndTime) {
                     this.completeHold(i);
                     continue;
                 }
-
-                // Visual: Consome a cauda
                 noteObj.el.style.transform = `translate3d(0, ${this.hitLineY}px, 0)`;
-                
                 const tail = noteObj.el.querySelector('.note-hold-body');
                 if (tail) {
-                    const remainingTime = noteObj.data.endTime - currentTime;
+                    const remainingTime = noteEndTime - currentTime;
                     const newHeight = (remainingTime / this.noteSpeed) * this.hitLineY;
                     tail.style.height = `${newHeight}px`;
                     tail.style.top = `-${newHeight}px`;
                 }
-
             } else {
-                // --- LÓGICA NORMAL (CAINDO) ---
-                const timeUntilHit = noteObj.data.time - currentTime;
+                // Lógica Normal
+                const timeUntilHit = targetTime - currentTime;
                 const progress = 1 - (timeUntilHit / this.noteSpeed);
                 const y = progress * this.hitLineY;
 
                 noteObj.el.style.transform = `translate3d(0, ${y}px, 0)`;
 
-                // MISS (Passou da linha)
                 if (timeUntilHit < -this.hitWindow && !noteObj.data.hit) {
                     this.handleMiss(i);
                 }
@@ -153,10 +193,8 @@ export default class NoteSpawner {
         if (!laneEl) return;
 
         const el = this.getNoteFromPool();
-        
         if (noteData.lane === 1 || noteData.lane === 2) el.classList.add('note-center');
         
-        // Desenha Cauda
         if (noteData.duration && noteData.duration > 0) {
             const tail = document.createElement('div');
             tail.className = 'note-hold-body';
@@ -168,47 +206,48 @@ export default class NoteSpawner {
 
         el.style.visibility = 'visible';
         laneEl.appendChild(el);
-        
         this.activeNotes.push({ el, data: noteData });
     }
 
-    // CHAMADO NO KEYDOWN
     checkHit(laneIndex) {
-        const currentTime = AudioEngine.bgmAudio.currentTime;
+        // Precisamos usar o tempo ajustado (com delay) para verificar o hit
+        let currentTime;
+        if (this.audioStarted) {
+            currentTime = this.audioDelay + AudioEngine.bgmAudio.currentTime;
+        } else {
+            currentTime = (performance.now() - this.startTime) / 1000;
+        }
 
         const noteIndex = this.activeNotes.findIndex(n => 
             n.data.lane === laneIndex && 
             !n.data.isHolding && 
-            Math.abs(n.data.time - currentTime) <= this.hitWindow
+            Math.abs(n.data.realTime - currentTime) <= this.hitWindow
         );
 
         if (noteIndex !== -1) {
             const note = this.activeNotes[noteIndex];
             
-            // Nota Normal
             if (!note.data.duration || note.data.duration <= 0) {
                 this.processNormalHit(note, noteIndex, currentTime);
                 return true;
-            } 
-            
-            // Nota Longa (Início)
-            else {
+            } else {
                 note.data.hit = true;
                 note.data.isHolding = true;
-                
-                // Aplica estado visual de segurar (Branco/Brilhante)
                 note.el.classList.add('note-holding'); 
-                
                 this.game.showFeedback('HOLD'); 
                 return true;
             }
         }
-        return false; // Retorna false para ativar o Anti-Spam no game.js
+        return false;
     }
 
-    // CHAMADO NO KEYUP
     checkLift(laneIndex) {
-        const currentTime = AudioEngine.bgmAudio.currentTime;
+        let currentTime;
+        if (this.audioStarted) {
+            currentTime = this.audioDelay + AudioEngine.bgmAudio.currentTime;
+        } else {
+            currentTime = (performance.now() - this.startTime) / 1000;
+        }
 
         const noteIndex = this.activeNotes.findIndex(n => 
             n.data.lane === laneIndex && n.data.isHolding
@@ -218,7 +257,6 @@ export default class NoteSpawner {
             const note = this.activeNotes[noteIndex];
             const timeRemaining = note.data.endTime - currentTime;
             
-            // Soltou muito cedo (> 0.2s sobrando)
             if (timeRemaining > 0.2) {
                 this.handleMiss(noteIndex);
             } else {
@@ -233,7 +271,7 @@ export default class NoteSpawner {
         this.activeNotes.splice(index, 1);
         setTimeout(() => this.returnNoteToPool(note.el), 100);
         
-        const diff = Math.abs(note.data.time - currentTime);
+        const diff = Math.abs(note.data.realTime - currentTime);
         let scoreType = 'GOOD';
         let points = 50;
         if (diff < this.perfectWindow) { scoreType = 'PERFECT'; points = 100; }
@@ -244,26 +282,20 @@ export default class NoteSpawner {
 
     completeHold(index) {
         const note = this.activeNotes[index];
-        
         note.el.classList.remove('note-holding');
         note.el.classList.add('note-hit');
-        
         this.activeNotes.splice(index, 1);
         setTimeout(() => this.returnNoteToPool(note.el), 100);
-
         this.game.showFeedback('PERFECT');
         this.game.updateScore(200, 'PERFECT');
     }
 
     handleMiss(index) {
         const note = this.activeNotes[index];
-        
         note.el.classList.remove('note-holding');
         note.el.classList.add('note-miss');
-        
         this.activeNotes.splice(index, 1);
         setTimeout(() => this.returnNoteToPool(note.el), 200);
-
         this.game.showFeedback('MISS');
         this.game.updateScore(0, 'MISS');
     }
