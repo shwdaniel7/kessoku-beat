@@ -155,6 +155,12 @@
     transition: transform 0.1s, opacity 0.1s !important; /* Aqui pode ter transição curta */
 }
 
+.note.note-hit {
+    /* Faz a cabeça brilhar enquanto segura */
+    box-shadow: 0 0 20px white !important;
+    background-color: white !important;
+}
+
 .note-miss {
     background: #555 !important;
     opacity: 0.5;
@@ -324,4 +330,50 @@ body.low-spec .feedback-text {
 body.low-spec #score-val, 
 body.low-spec #combo-val {
     text-shadow: none !important;
+}
+
+/* =========================================
+   NOTAS LONGAS
+   ========================================= */
+/* Corpo da nota longa */
+.note-hold-body {
+    position: absolute;
+    width: 100%;
+    /* A altura será definida via JS */
+    background: rgba(232, 108, 166, 0.5); /* Rosa transparente */
+    border-left: 2px solid var(--color-bocchi);
+    border-right: 2px solid var(--color-bocchi);
+    top: 0; /* Começa no topo da nota "cabeça" */
+    transform-origin: top;
+    z-index: 19; /* Atrás da cabeça da nota */
+    pointer-events: none;
+}
+
+/* Nota central longa */
+.note-center .note-hold-body {
+    background: rgba(0, 122, 204, 0.5);
+    border-color: var(--color-ryo);
+}
+
+.note-holding {
+    background-color: #fff !important; /* Fica branca */
+    box-shadow: 0 0 20px #fff, 0 0 40px var(--color-bocchi) !important; /* Muito brilho */
+    z-index: 30 !important; /* Fica por cima de tudo */
+    transform: scale(1.1); /* Leve aumento */
+    /* IMPORTANTE: Não tem opacity: 0 aqui! */
+}
+
+/* Garante que a cauda continue visível e brilhante */
+.note-holding .note-hold-body {
+    background-color: rgba(255, 255, 255, 0.6);
+    border-color: #fff;
+    box-shadow: 0 0 10px #fff;
+}
+
+/* Feedback de Spam (Erro por apertar sem nota) */
+.spam-active {
+    background: rgba(255, 0, 0, 0.5) !important;
+    box-shadow: 0 0 20px red !important;
+    border-color: red !important;
+    transform: scaleY(0.8) !important; /* Efeito de "amassar" */
 }

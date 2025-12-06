@@ -283,3 +283,50 @@
     text-transform: uppercase;
     margin-right: 15px; /* Alinha visualmente com o botão inclinado */
 }
+
+/* Adicione isso no final do arquivo */
+
+.difficulty-selector {
+    display: flex;
+    gap: 15px;
+    margin-top: 20px;
+    z-index: 20;
+}
+
+.diff-btn {
+    background: rgba(0,0,0,0.5);
+    border: 1px solid rgba(255,255,255,0.2);
+    padding: 10px 20px;
+    color: #888;
+    font-family: var(--font-display);
+    cursor: pointer;
+    transition: all 0.2s;
+    min-width: 120px;
+    text-align: center;
+    transform: skewX(-10deg);
+}
+
+.diff-btn:hover {
+    background: rgba(255,255,255,0.1);
+    color: white;
+}
+
+.diff-btn.active {
+    background: var(--color-bocchi);
+    color: white;
+    border-color: var(--color-bocchi);
+    box-shadow: 0 0 15px var(--color-bocchi);
+    transform: skewX(-10deg) scale(1.1);
+}
+
+.diff-name {
+    display: block;
+    font-size: 1.2rem;
+    font-weight: bold;
+}
+
+.diff-level {
+    display: block;
+    font-size: 0.8rem;
+    opacity: 0.8;
+}

@@ -29,6 +29,12 @@ architecture, performance, and visual polish.
 
 ## ✨ Features
 
+### 🆕 New in v1.3.0
+- **Hold Notes:** Added support for long notes. Players must hold the key and release it at the right time.
+- **Difficulty System:** Songs now support multiple charts (e.g., Easy, Hard) with a selector in the menu.
+- **Anti-Spam Mechanic:** "Ghost tapping" (pressing keys when there are no notes) now resets the combo to encourage rhythmic precision.
+- **Editor Upgrade:** The in-game editor now automatically detects and records hold notes based on how long you press the key.
+
 ### 🆕 New in v1.2.0
 - **Overhauled Results Screen:** Complete visual redesign with glassmorphism UI.
 - **Ranking System:** Calculates accuracy (SS, S, A, B, C) and displays dynamic character stickers based on performance.

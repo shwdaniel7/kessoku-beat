@@ -7,9 +7,12 @@ export default class EditorScreen {
         this.recordedNotes = [];
         this.isPlaying = false;
         
-        // BINDING: Precisamos disso para poder remover o evento depois
-        // Se não fizermos isso, o removeEventListener não funciona
-        this.handleInputBound = this.handleInput.bind(this);
+        // Armazena o tempo que a tecla foi apertada { lane: timestamp }
+        this.activeHolds = {}; 
+
+        // Bindings
+        this.handleKeyDownBound = this.handleKeyDown.bind(this);
+        this.handleKeyUpBound = this.handleKeyUp.bind(this);
         this.handleStartBound = this.handleStart.bind(this);
     }
 
@@ -18,7 +21,7 @@ export default class EditorScreen {
             <div class="screen-container game-screen">
                 <div class="game-ui">
                     <div class="score-box" style="width: 100%; text-align: center;">
-                        <span class="label" style="color: red;">🔴 REC MODE</span>
+                        <span class="label" style="color: red;">🔴 REC MODE (HOLD SUPPORT)</span>
                         <span id="rec-count" style="font-size: 2rem; display: block;">0 NOTES</span>
                     </div>
                 </div>
@@ -42,78 +45,87 @@ export default class EditorScreen {
     }
 
     init() {
-        // Adiciona os ouvintes de evento usando as referências salvas
-        document.addEventListener('keydown', this.handleInputBound);
+        document.addEventListener('keydown', this.handleKeyDownBound);
+        document.addEventListener('keyup', this.handleKeyUpBound);
         document.addEventListener('keydown', this.handleStartBound);
         
-        document.getElementById('btn-export').addEventListener('click', () => {
-            this.exportJSON();
-        });
+        document.getElementById('btn-export').addEventListener('click', () => this.exportJSON());
     }
 
     handleStart(e) {
         if (e.code === 'Space' && !this.isPlaying) {
-            // Remove o listener de espaço para não reiniciar sem querer
             document.removeEventListener('keydown', this.handleStartBound);
             this.startRecording();
         }
     }
 
     startRecording() {
-        const overlay = document.getElementById('start-overlay');
-        if(overlay) overlay.style.display = 'none';
-        
+        document.getElementById('start-overlay').style.display = 'none';
         this.isPlaying = true;
-        
-        const audioPath = `./assets/audio/${this.songId}.mp3`;
-        AudioEngine.playBGM(audioPath);
+        // Tenta carregar o áudio base (assumindo que o nome do arquivo é o começo do ID)
+        // Ex: song1_hard -> carrega song1.mp3. 
+        // Se seus arquivos de audio e chart tiverem nomes muito diferentes, precisará ajustar aqui.
+        const audioFile = this.songId.split('_')[0]; 
+        AudioEngine.playBGM(`./assets/audio/${audioFile}.mp3`);
         console.log("🔴 GRAVANDO...");
     }
 
-    handleInput(e) {
-        if (!this.isPlaying) return;
-
-        // CORREÇÃO 1: Ignora se a tecla estiver sendo segurada (auto-repeat)
-        if (e.repeat) return;
+    handleKeyDown(e) {
+        if (!this.isPlaying || e.repeat) return;
 
         const keyMap = { 'KeyD': 0, 'KeyF': 1, 'KeyJ': 2, 'KeyK': 3 };
-
         if (keyMap[e.code] !== undefined) {
             const lane = keyMap[e.code];
             const time = AudioEngine.bgmAudio.currentTime;
-
-            // Arredonda para evitar números gigantes
-            const cleanTime = Math.round(time * 1000) / 1000;
             
+            // Marca o início do aperto
+            this.activeHolds[lane] = time;
+            
+            // Feedback visual (Início)
+            this.triggerLane(lane, true);
+        }
+    }
+
+    handleKeyUp(e) {
+        if (!this.isPlaying) return;
+
+        const keyMap = { 'KeyD': 0, 'KeyF': 1, 'KeyJ': 2, 'KeyK': 3 };
+        if (keyMap[e.code] !== undefined) {
+            const lane = keyMap[e.code];
+            
+            // Se não tiver um início registrado, ignora
+            if (this.activeHolds[lane] === undefined) return;
+
+            const startTime = this.activeHolds[lane];
+            const endTime = AudioEngine.bgmAudio.currentTime;
+            const duration = endTime - startTime;
+
+            // Limpa o registro
+            delete this.activeHolds[lane];
+
+            // Feedback visual (Fim)
+            this.triggerLane(lane, false);
+
+            // Salva a nota
+            // Se for muito curto (< 0.15s), considera nota normal (duration 0)
+            const finalDuration = duration > 0.15 ? duration : 0;
+
             this.recordedNotes.push({
-                time: cleanTime,
-                lane: lane
+                time: Math.round(startTime * 1000) / 1000,
+                lane: lane,
+                duration: Math.round(finalDuration * 1000) / 1000
             });
 
-            this.triggerLane(lane);
             this.updateCounter();
         }
     }
 
-    triggerLane(index) {
+    triggerLane(index, isActive) {
         const lanes = document.querySelectorAll('.lane');
         if (lanes[index]) {
             const hitZone = lanes[index].querySelector('.hit-zone');
-            hitZone.classList.add('hit-active');
-            
-            const ghost = document.createElement('div');
-            ghost.className = 'note';
-            ghost.style.bottom = '50px';
-            ghost.style.background = 'rgba(255,255,255,0.5)';
-            // Remove transição para feedback instantâneo
-            ghost.style.transition = 'none'; 
-            
-            lanes[index].appendChild(ghost);
-
-            setTimeout(() => {
-                hitZone.classList.remove('hit-active');
-                ghost.remove();
-            }, 100);
+            if (isActive) hitZone.classList.add('hit-active');
+            else hitZone.classList.remove('hit-active');
         }
     }
 
@@ -125,36 +137,26 @@ export default class EditorScreen {
     exportJSON() {
         this.isPlaying = false;
         AudioEngine.stopBGM();
-
         this.recordedNotes.sort((a, b) => a.time - b.time);
 
-        // Tenta pegar o BPM da lista se possível, senão usa padrão
         const jsonOutput = {
-            title: "Minha Musica Gravada",
-            bpm: 180, 
+            title: "Chart Gravado",
+            bpm: 0, 
             offset: 0,
             notes: this.recordedNotes
         };
 
         console.clear();
-        console.log("%c COPIE O OBJETO ABAIXO:", "color: lime; font-size: 20px;");
         console.log(JSON.stringify(jsonOutput, null, 4));
-        
-        alert("JSON gerado no Console (F12)! Copie e cole no arquivo da música.");
-        
-        // Volta para o menu ou seleção
+        alert("JSON gerado no Console! Copie e salve no arquivo correto.");
         Router.navigate('select');
     }
 
-    // CORREÇÃO 2: Limpeza de memória
     destroy() {
         this.isPlaying = false;
         AudioEngine.stopBGM();
-        
-        // Remove os eventos globais para não duplicar na próxima vez
-        document.removeEventListener('keydown', this.handleInputBound);
+        document.removeEventListener('keydown', this.handleKeyDownBound);
+        document.removeEventListener('keyup', this.handleKeyUpBound);
         document.removeEventListener('keydown', this.handleStartBound);
-        
-        console.log("Editor destruído e eventos limpos.");
     }
 }

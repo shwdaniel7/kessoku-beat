@@ -4,19 +4,17 @@ import NoteSpawner from '../noteSpawner.js';
 
 export default class GameScreen {
     constructor(params) {
+        // Identificadores para carregar áudio e chart separadamente
         this.songId = params.songId || 'song1';
+        this.chartId = params.chartId || (params.songId ? params.songId + '_hard' : 'song1_hard');
         
         this.score = 0;
         this.combo = 0;
-        this.maxCombo = 0; // <--- NOVO: Guarda o maior combo da partida
+        this.maxCombo = 0;
         
-        // Contadores para precisão real
-        this.hits = {
-            perfect: 0,
-            good: 0,
-            miss: 0
-        };
-
+        // Contadores para precisão
+        this.hits = { perfect: 0, good: 0, miss: 0 };
+        
         this.isPlaying = false;
         this.spawner = null;
     }
@@ -24,6 +22,7 @@ export default class GameScreen {
     render() {
         return `
             <div class="screen-container game-screen">
+                <!-- Interface de Pontuação -->
                 <div class="game-ui">
                     <div class="score-box">
                         <span class="label">SCORE</span>
@@ -35,8 +34,10 @@ export default class GameScreen {
                     </div>
                 </div>
                 
+                <!-- Feedback Visual (Perfect/Miss) -->
                 <div id="feedback-container"></div>
                 
+                <!-- Pista das Notas -->
                 <div class="track-container">
                     <div class="lane" id="lane-0"><div class="key-hint">D</div><div class="hit-zone"></div></div>
                     <div class="lane" id="lane-1"><div class="key-hint">F</div><div class="hit-zone"></div></div>
@@ -44,6 +45,7 @@ export default class GameScreen {
                     <div class="lane" id="lane-3"><div class="key-hint">K</div><div class="hit-zone"></div></div>
                 </div>
 
+                <!-- Overlay de Start -->
                 <div class="game-overlay" id="start-overlay">
                     <div class="countdown">READY</div>
                 </div>
@@ -52,8 +54,12 @@ export default class GameScreen {
     }
 
     init() {
-        this.spawner = new NoteSpawner(this.songId, this);
+        this.spawner = new NoteSpawner(this.chartId, this);
+        
+        // Listeners de Input
         document.addEventListener('keydown', (e) => this.handleInput(e));
+        document.addEventListener('keyup', (e) => this.handleKeyUp(e));
+
         this.startCountdown();
     }
 
@@ -76,28 +82,83 @@ export default class GameScreen {
 
     startGame() {
         this.isPlaying = true;
+        
         const audioPath = `./assets/audio/${this.songId}.mp3`;
+        console.log(`🎵 Tocando: ${audioPath} | 🗺️ Chart: ${this.chartId}`);
+        
+        // false = Não loopar a música no gameplay
         AudioEngine.playBGM(audioPath, false);
+        
         this.spawner.start();
     }
 
     handleInput(e) {
-        if (!this.isPlaying) return;
+        if (!this.isPlaying || e.repeat) return; // Ignora se segurar a tecla (repeat nativo)
+        
         const keyMap = { 'KeyD': 0, 'KeyF': 1, 'KeyJ': 2, 'KeyK': 3 };
+
         if (keyMap[e.code] !== undefined) {
             const laneIndex = keyMap[e.code];
-            this.triggerLane(laneIndex);
-            this.spawner.checkHit(laneIndex);
+            
+            // Verifica se acertou algo
+            const hit = this.spawner.checkHit(laneIndex);
+            
+            if (hit) {
+                // Acertou: Feedback normal
+                this.triggerLane(laneIndex, 'hit');
+            } else {
+                // Errou (Spam/Ghost Tap): Punição
+                this.handleSpam(laneIndex);
+            }
         }
     }
 
-    triggerLane(index) {
+    handleKeyUp(e) {
+        if (!this.isPlaying) return;
+        
+        const keyMap = { 'KeyD': 0, 'KeyF': 1, 'KeyJ': 2, 'KeyK': 3 };
+        
+        if (keyMap[e.code] !== undefined) {
+            const laneIndex = keyMap[e.code];
+            
+            // Remove brilho da tecla
+            const lanes = document.querySelectorAll('.lane');
+            if (lanes[laneIndex]) {
+                lanes[laneIndex].querySelector('.hit-zone').classList.remove('hit-active', 'spam-active');
+            }
+
+            // Avisa o Spawner que soltou (para Hold Notes)
+            this.spawner.checkLift(laneIndex);
+        }
+    }
+
+    triggerLane(index, type = 'hit') {
         const lanes = document.querySelectorAll('.lane');
         if (lanes[index]) {
             const hitZone = lanes[index].querySelector('.hit-zone');
-            hitZone.classList.add('hit-active');
-            setTimeout(() => hitZone.classList.remove('hit-active'), 100);
+            
+            // Reset visual
+            hitZone.classList.remove('hit-active', 'spam-active');
+            void hitZone.offsetWidth; // Force reflow
+
+            if (type === 'hit') {
+                hitZone.classList.add('hit-active');
+            } else {
+                hitZone.classList.add('spam-active'); // Vermelho
+            }
         }
+    }
+
+    handleSpam(laneIndex) {
+        this.triggerLane(laneIndex, 'spam');
+        
+        // Reseta combo (Punição)
+        this.combo = 0;
+        
+        const comboEl = document.getElementById('combo-val');
+        comboEl.innerText = 0;
+        comboEl.style.color = '#555';
+        comboEl.classList.remove('combo-pulse');
     }
 
     showFeedback(type) {
@@ -111,7 +172,7 @@ export default class GameScreen {
     }
 
     updateScore(points, type) {
-        // Atualiza contadores de precisão
+        // Estatísticas
         if (type === 'PERFECT') this.hits.perfect++;
         if (type === 'GOOD') this.hits.good++;
         if (type === 'MISS') this.hits.miss++;
@@ -125,12 +186,10 @@ export default class GameScreen {
             this.score += points + (this.combo * 10);
             this.combo++;
             
-            // --- CORREÇÃO DO MAX COMBO ---
-            // Se o combo atual for maior que o recorde, atualiza o recorde
-            if (this.combo > this.maxCombo) {
-                this.maxCombo = this.combo;
-            }
+            // Atualiza Max Combo
+            if (this.combo > this.maxCombo) this.maxCombo = this.combo;
 
+            // Animação de pulo
             const comboEl = document.getElementById('combo-val');
             comboEl.classList.remove('combo-pulse');
             void comboEl.offsetWidth;
@@ -146,12 +205,8 @@ export default class GameScreen {
         this.isPlaying = false;
         AudioEngine.stopBGM();
         
-        // --- CÁLCULO DE PRECISÃO REAL ---
-        // Total de notas tocadas até agora
+        // Cálculo de Accuracy Ponderada
         const totalPlayed = this.hits.perfect + this.hits.good + this.hits.miss;
-        
-        // Cálculo ponderado: Perfect vale 100%, Good vale 50%, Miss vale 0%
-        // Evita divisão por zero
         let accuracy = 0;
         if (totalPlayed > 0) {
             const weightedScore = (this.hits.perfect * 1) + (this.hits.good * 0.5);
@@ -161,9 +216,9 @@ export default class GameScreen {
         setTimeout(() => {
             Router.navigate('results', { 
                 score: this.score, 
-                maxCombo: this.maxCombo, // Envia o maior combo atingido
-                accuracy: accuracy,      // Envia a porcentagem já calculada
-                rank: this.calculateRank(accuracy) // Envia o rank calculado
+                maxCombo: this.maxCombo,
+                accuracy: accuracy,
+                rank: this.calculateRank(accuracy)
             });
         }, 2000);
     }
