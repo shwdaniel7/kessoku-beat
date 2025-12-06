@@ -66,6 +66,8 @@ async start() {
             if (!response.ok) throw new Error("Chart não encontrado");
             
             const data = await response.json();
+
+            this.totalNotes = data.notes.length; 
             
             // Prepara as notas
             this.chartNotes = data.notes.map(n => ({

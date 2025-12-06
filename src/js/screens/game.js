@@ -5,8 +5,18 @@ import NoteSpawner from '../noteSpawner.js';
 export default class GameScreen {
     constructor(params) {
         this.songId = params.songId || 'song1';
+        
         this.score = 0;
         this.combo = 0;
+        this.maxCombo = 0; // <--- NOVO: Guarda o maior combo da partida
+        
+        // Contadores para precisão real
+        this.hits = {
+            perfect: 0,
+            good: 0,
+            miss: 0
+        };
+
         this.isPlaying = false;
         this.spawner = null;
     }
@@ -14,7 +24,6 @@ export default class GameScreen {
     render() {
         return `
             <div class="screen-container game-screen">
-                <!-- Interface de Pontuação -->
                 <div class="game-ui">
                     <div class="score-box">
                         <span class="label">SCORE</span>
@@ -26,10 +35,8 @@ export default class GameScreen {
                     </div>
                 </div>
                 
-                <!-- ZONA DE FEEDBACK (PERFECT / MISS) -->
                 <div id="feedback-container"></div>
                 
-                <!-- Pista das Notas -->
                 <div class="track-container">
                     <div class="lane" id="lane-0"><div class="key-hint">D</div><div class="hit-zone"></div></div>
                     <div class="lane" id="lane-1"><div class="key-hint">F</div><div class="hit-zone"></div></div>
@@ -37,7 +44,6 @@ export default class GameScreen {
                     <div class="lane" id="lane-3"><div class="key-hint">K</div><div class="hit-zone"></div></div>
                 </div>
 
-                <!-- Overlay de Start -->
                 <div class="game-overlay" id="start-overlay">
                     <div class="countdown">READY</div>
                 </div>
@@ -46,13 +52,8 @@ export default class GameScreen {
     }
 
     init() {
-        // Inicializa o Spawner
         this.spawner = new NoteSpawner(this.songId, this);
-        
-        // Configura input do teclado
         document.addEventListener('keydown', (e) => this.handleInput(e));
-
-        // Inicia contagem regressiva
         this.startCountdown();
     }
 
@@ -75,27 +76,17 @@ export default class GameScreen {
 
     startGame() {
         this.isPlaying = true;
-        
         const audioPath = `./assets/audio/${this.songId}.mp3`;
-        console.log("Tocando música:", audioPath);
-        
-        AudioEngine.playBGM(audioPath, false); 
-        
+        AudioEngine.playBGM(audioPath, false);
         this.spawner.start();
     }
 
     handleInput(e) {
         if (!this.isPlaying) return;
-        
         const keyMap = { 'KeyD': 0, 'KeyF': 1, 'KeyJ': 2, 'KeyK': 3 };
-
         if (keyMap[e.code] !== undefined) {
             const laneIndex = keyMap[e.code];
-            
-            // Efeito visual na linha (brilho)
             this.triggerLane(laneIndex);
-            
-            // Verifica com o Spawner se acertou algo
             this.spawner.checkHit(laneIndex);
         }
     }
@@ -109,52 +100,80 @@ export default class GameScreen {
         }
     }
 
-    // Exibe o texto PERFECT, GOOD ou MISS
     showFeedback(type) {
         const container = document.getElementById('feedback-container');
-        
-        // Limpa anterior
         container.innerHTML = '';
-
         const el = document.createElement('div');
         el.innerText = type;
         el.className = `feedback-text ${type.toLowerCase()}`;
-        
         container.appendChild(el);
-
-        // Remove do DOM após animação
-        setTimeout(() => {
-            if (el.parentNode) el.remove();
-        }, 500);
+        setTimeout(() => { if (el.parentNode) el.remove(); }, 500);
     }
 
     updateScore(points, type) {
-        const comboEl = document.getElementById('combo-val');
+        // Atualiza contadores de precisão
+        if (type === 'PERFECT') this.hits.perfect++;
+        if (type === 'GOOD') this.hits.good++;
+        if (type === 'MISS') this.hits.miss++;
 
         if (type === 'MISS') {
             this.combo = 0;
+            const comboEl = document.getElementById('combo-val');
             comboEl.style.color = '#555';
-            comboEl.classList.remove('combo-pulse'); // Remove animação se errar
+            comboEl.classList.remove('combo-pulse');
         } else {
             this.score += points + (this.combo * 10);
             this.combo++;
             
-            // Efeito de Pulo no Combo
-            comboEl.classList.remove('combo-pulse'); // Reseta
-            void comboEl.offsetWidth; // Força o navegador a recalcular (hack para reiniciar animação CSS)
-            comboEl.classList.add('combo-pulse'); // Adiciona de novo
+            // --- CORREÇÃO DO MAX COMBO ---
+            // Se o combo atual for maior que o recorde, atualiza o recorde
+            if (this.combo > this.maxCombo) {
+                this.maxCombo = this.combo;
+            }
+
+            const comboEl = document.getElementById('combo-val');
+            comboEl.classList.remove('combo-pulse');
+            void comboEl.offsetWidth;
+            comboEl.classList.add('combo-pulse');
+            comboEl.style.color = 'var(--color-nijika)';
         }
         
         document.getElementById('score-val').innerText = this.score;
-        comboEl.innerText = this.combo;
+        document.getElementById('combo-val').innerText = this.combo;
     }
 
     endGame() {
         this.isPlaying = false;
         AudioEngine.stopBGM();
+        
+        // --- CÁLCULO DE PRECISÃO REAL ---
+        // Total de notas tocadas até agora
+        const totalPlayed = this.hits.perfect + this.hits.good + this.hits.miss;
+        
+        // Cálculo ponderado: Perfect vale 100%, Good vale 50%, Miss vale 0%
+        // Evita divisão por zero
+        let accuracy = 0;
+        if (totalPlayed > 0) {
+            const weightedScore = (this.hits.perfect * 1) + (this.hits.good * 0.5);
+            accuracy = Math.round((weightedScore / totalPlayed) * 100);
+        }
+
         setTimeout(() => {
-            Router.navigate('results', { score: this.score, maxCombo: this.combo });
+            Router.navigate('results', { 
+                score: this.score, 
+                maxCombo: this.maxCombo, // Envia o maior combo atingido
+                accuracy: accuracy,      // Envia a porcentagem já calculada
+                rank: this.calculateRank(accuracy) // Envia o rank calculado
+            });
         }, 2000);
+    }
+
+    calculateRank(acc) {
+        if (acc >= 100) return 'SS';
+        if (acc >= 90) return 'S';
+        if (acc >= 80) return 'A';
+        if (acc >= 60) return 'B';
+        return 'C';
     }
 
     destroy() {

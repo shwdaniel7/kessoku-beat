@@ -15,7 +15,7 @@ architecture, performance, and visual polish.
 
   
 
-![Project Status](https://img.shields.io/badge/Status-Version_v1.1.0-pink)
+![Project Status](https://img.shields.io/badge/Status-Version_v1.2.0-pink)
 
 ![Tech](https://img.shields.io/badge/Tech-HTML5_%7C_CSS3_%7C_ES6+-blue)
 
@@ -28,6 +28,11 @@ architecture, performance, and visual polish.
   
 
 ## ✨ Features
+
+### 🆕 New in v1.2.0
+- **Overhauled Results Screen:** Complete visual redesign with glassmorphism UI.
+- **Ranking System:** Calculates accuracy (SS, S, A, B, C) and displays dynamic character stickers based on performance.
+- **Fixed Scoring Logic:** "Max Combo" is now tracked correctly even if the combo breaks at the end. Accuracy is calculated based on note hits (weighted) rather than total score.
 
 ### 🆕 New in v1.1.0
 - **Enhanced Visual Feedback:** New explosive animations for "PERFECT" hits and a shaking effect for "MISS". The Combo counter now pulses on every hit.
