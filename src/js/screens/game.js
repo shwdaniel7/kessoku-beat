@@ -76,13 +76,11 @@ export default class GameScreen {
     startGame() {
         this.isPlaying = true;
         
-        // Caminho absoluto para garantir que toque
         const audioPath = `./assets/audio/${this.songId}.mp3`;
         console.log("Tocando música:", audioPath);
         
-        AudioEngine.playBGM(audioPath);
+        AudioEngine.playBGM(audioPath, false); 
         
-        // Inicia as notas
         this.spawner.start();
     }
 

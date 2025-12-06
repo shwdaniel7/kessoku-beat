@@ -15,23 +15,24 @@ class AudioEngine {
         this.volSfx = (savedSfx !== null && !isNaN(savedSfx)) ? parseFloat(savedSfx) : 0.5;
     }
 
-    playBGM(url) {
+        playBGM(url, loop = true) { // <--- Adicionei o parâmetro loop com padrão true
         if (this.currentBgmUrl === url && !this.bgmAudio.paused) return;
 
         this.currentBgmUrl = url;
         this.bgmAudio.src = url;
+        this.bgmAudio.loop = loop; // <--- APLICA O LOOP AQUI
         
-        // Garante que o volume é um número finito antes de atribuir
+        // Validação de volume
         if (isFinite(this.volMusic)) {
             this.bgmAudio.volume = this.volMusic;
         } else {
-            this.bgmAudio.volume = 0.5; // Fallback de segurança
+            this.bgmAudio.volume = 0.5;
         }
         
         const playPromise = this.bgmAudio.play();
         if (playPromise !== undefined) {
             playPromise.catch(error => {
-                console.warn("Autoplay bloqueado. Interaja com a tela.");
+                console.warn("Autoplay bloqueado.");
             });
         }
     }

@@ -58,7 +58,7 @@ export default class NoteSpawner {
         this.notePool.push(el);
     }
 
-    async start() {
+async start() {
         const path = `./assets/charts/${this.songId}.json`;
         try {
             const response = await fetch(path);
@@ -73,10 +73,21 @@ export default class NoteSpawner {
                 hit: false
             })).sort((a, b) => a.spawnTime - b.spawnTime);
 
+            // --- NOVO: Descobre quando a música "acaba" (tempo da última nota) ---
+            if (this.chartNotes.length > 0) {
+                const lastNote = this.chartNotes[this.chartNotes.length - 1];
+                // O jogo acaba 3 segundos depois da última nota
+                this.endTime = lastNote.time + 3.0; 
+            } else {
+                this.endTime = 10.0; // Fallback se não tiver notas
+            }
+
             this.isPlaying = true;
             this.loop();
         } catch (e) {
             console.error("Erro ao carregar chart:", e);
+            // Se der erro, volta pro menu pra não travar
+            this.game.endGame(); 
         }
     }
 
@@ -84,6 +95,20 @@ export default class NoteSpawner {
         if (!this.isPlaying) return;
 
         const currentTime = AudioEngine.bgmAudio ? AudioEngine.bgmAudio.currentTime : 0;
+        
+        // --- VERIFICAÇÃO DE FIM DE JOGO ATUALIZADA ---
+        // O jogo acaba se:
+        // 1. O tempo passou do final calculado (endTime) OU
+        // 2. O áudio terminou de tocar (ended)
+        // E TAMBÉM não tem mais notas na tela.
+        const audioEnded = AudioEngine.bgmAudio ? AudioEngine.bgmAudio.ended : false;
+
+        if ((currentTime > this.endTime || audioEnded) && this.activeNotes.length === 0) {
+            console.log("Fim da música detectado!"); // Debug
+            this.stop();
+            this.game.endGame();
+            return;
+        }
 
         // 1. SPAWNAR NOTAS
         while (this.chartNotes.length > 0 && currentTime >= this.chartNotes[0].spawnTime) {
@@ -91,19 +116,16 @@ export default class NoteSpawner {
             this.spawnNote(noteData);
         }
 
-        // 2. MOVER NOTAS (GPU ACCELERATED)
+        // 2. MOVER NOTAS
         for (let i = this.activeNotes.length - 1; i >= 0; i--) {
             const noteObj = this.activeNotes[i];
             const timeUntilHit = noteObj.data.time - currentTime;
             
-            // Calcula posição Y
             const progress = 1 - (timeUntilHit / this.noteSpeed);
             const y = progress * this.hitLineY;
 
-            // Move usando placa de vídeo
             noteObj.el.style.transform = `translate3d(0, ${y}px, 0)`;
 
-            // MISS (Passou da linha)
             if (timeUntilHit < -this.hitWindow && !noteObj.data.hit) {
                 this.handleMiss(i);
             }
