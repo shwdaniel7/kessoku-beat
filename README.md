@@ -27,27 +27,23 @@ architecture, performance, and visual polish.
 
   
 
-## ✨ Features (v1.0)
+## ✨ Features
 
-  
+### 🆕 New in v1.1.0
+- **Enhanced Visual Feedback:** New explosive animations for "PERFECT" hits and a shaking effect for "MISS". The Combo counter now pulses on every hit.
+- **Refined Gameplay Feel:** Adjusted hit windows (250ms) and "Perfect" timing (80ms) to make the game feel more responsive, fair, and fun.
+- **Smart Game Loop:** The game now correctly detects the end of the song (or the last note) to trigger the Results screen automatically.
 
--  **Custom Rhythm Engine:** Precise timing system based on `AudioContext` (not frame-dependent).
-
--  **JSON Chart System:** External JSON chart loading for easy expansion.
-
--  **In-Game Chart Editor:** Create charts while playing! (Press `E` on the selection screen).
-
--  **Performance Optimized:**
-
--  **Object Pooling:** Recycles DOM elements to avoid GC stutter.
-
--  **Low Spec Mode:** Disables heavy effects for older hardware.
-
--  **GPU Acceleration:** Uses `translate3d` for smooth note movement.
-
--  **Reactive UI:** SPA-style transitions + glassmorphism.
-
--  **Dynamic Audio:** Independent BGM/SFX sliders.
+### 🚀 Core Features
+- **Custom Rhythm Engine:** Precise timing system based on `AudioContext` (not frame-dependent) for accurate gameplay.
+- **JSON Chart System:** Songs and note patterns are loaded via external JSON files.
+- **In-Game Chart Editor:** Create your own charts while playing! (Press `E` in the selection screen).
+- **Performance Optimized:**
+  - **Object Pooling:** Recycles DOM elements to ensure smooth 60/144 FPS without garbage collection stutters.
+  - **Low Spec Mode:** Disables 3D perspective and heavy glow effects for older hardware.
+  - **GPU Acceleration:** Uses `translate3d` for smooth note movement.
+- **Reactive UI:** SPA (Single Page Application) architecture with cinematic transitions and glassmorphism.
+- **Dynamic Audio:** Independent volume control (BGM/SFX) and interactive sound effects.
 
   
 
