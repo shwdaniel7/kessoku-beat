@@ -1,0 +1,116 @@
+.tutorial-screen {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Fundo Específico do Tutorial */
+.tutorial-bg {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    /* Se tiver uma imagem específica da Nijika, coloque aqui */
+    background-image: url('../../../assets/images/tutorial_bg.jpg'); 
+    background-size: cover;
+    background-position: center;
+    filter: blur(5px) sepia(0.5) hue-rotate(10deg); /* Filtro amarelado no fundo */
+    z-index: 0;
+}
+
+.screen-overlay {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.7);
+    z-index: 1;
+}
+
+/* Painel Estilo Nijika (Amarelo) */
+.tutorial-panel {
+    position: relative;
+    z-index: 10;
+    width: 500px;
+    background: linear-gradient(180deg, rgba(30,30,35,0.95) 0%, rgba(15,15,10,0.98) 100%);
+    
+    /* Borda e Sombra Amarelas */
+    border: 1px solid var(--color-nijika);
+    box-shadow: 0 0 40px rgba(242, 214, 75, 0.15);
+    
+    padding: 40px;
+    transform: skewX(-2deg); /* Inclinação Cyberpunk */
+    text-align: center;
+}
+
+.tutorial-panel h2 {
+    font-family: var(--font-display);
+    color: var(--color-nijika);
+    border-bottom: 2px solid var(--color-nijika);
+    padding-bottom: 15px;
+    margin-bottom: 30px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    text-shadow: 0 0 10px rgba(242, 214, 75, 0.5);
+}
+
+/* Teclas */
+.key-guide {
+    display: flex;
+    gap: 30px;
+    justify-content: center;
+    margin-bottom: 30px;
+}
+
+.key-box {
+    display: flex;
+    gap: 10px;
+}
+
+.key {
+    width: 60px;
+    height: 60px;
+    
+    /* Estilo das teclas em Amarelo */
+    border: 2px solid var(--color-nijika);
+    color: var(--color-nijika);
+    box-shadow: 0 0 15px rgba(242, 214, 75, 0.2);
+    
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-display);
+    font-size: 1.8rem;
+    background: rgba(0,0,0,0.3);
+    transform: skewX(2deg); /* Compensa a inclinação do painel */
+}
+
+.instructions p {
+    font-family: var(--font-body);
+    font-size: 1.1rem;
+    margin-bottom: 10px;
+    color: #ccc;
+    transform: skewX(2deg); /* Compensa a inclinação */
+}
+
+.highlight {
+    color: var(--color-nijika);
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+/* Botão Voltar customizado para Nijika */
+#btn-back {
+    margin-top: 30px;
+    width: 100%;
+    border-color: var(--color-nijika);
+    color: var(--text-white);
+    transform: skewX(0deg); /* Reset do skew do botão base se necessário */
+}
+
+#btn-back:hover {
+    background: rgba(242, 214, 75, 0.2);
+    box-shadow: 0 0 20px var(--color-nijika);
+    color: #fff;
+}

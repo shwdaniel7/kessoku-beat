@@ -1,0 +1,13 @@
+# Arquivos de Sistema Operacional
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Logs e Debug
+*.log
+npm-debug.log*
+
+# Configurações de Editor (Opcional, bom para não subir suas configs pessoais)
+.vscode/
+.idea/

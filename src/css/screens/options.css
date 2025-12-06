@@ -1,0 +1,142 @@
+/* src/css/screens/options.css */
+
+.options-screen {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* MUDEI O NOME DA CLASSE AQUI DE .screen-bg PARA .options-bg */
+.options-bg {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    
+    /* COLOQUE O NOME DA SUA NOVA IMAGEM AQUI */
+    background-image: url('../../../assets/images/options_bg.png'); 
+    
+    background-size: cover;
+    background-position: center;
+    filter: blur(5px) grayscale(0.3);
+    z-index: 0;
+}
+
+.screen-overlay {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.7);
+    z-index: 1;
+}
+
+.options-panel {
+    position: relative;
+    z-index: 10;
+    width: 500px;
+    background: linear-gradient(180deg, rgba(30,30,40,0.95) 0%, rgba(10,10,15,0.98) 100%);
+    border: 1px solid var(--color-ryo);
+    padding: 40px;
+    box-shadow: 0 0 40px rgba(0, 122, 204, 0.2);
+    transform: skewX(-2deg); /* Estilo Cyberpunk */
+}
+
+.options-panel h2 {
+    font-family: var(--font-display);
+    color: var(--color-ryo);
+    border-bottom: 2px solid var(--color-ryo);
+    padding-bottom: 10px;
+    margin-bottom: 30px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+.option-group {
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+    margin-bottom: 40px;
+}
+
+.option-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 1.2rem;
+    font-family: var(--font-display);
+}
+
+/* Estilo do Toggle Switch */
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 30px;
+}
+
+.switch input { opacity: 0; width: 0; height: 0; }
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: #333;
+    transition: .4s;
+    transform: skewX(10deg); /* Switch inclinado */
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 22px;
+    width: 22px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: .4s;
+}
+
+input:checked + .slider {
+    background-color: var(--color-bocchi);
+    box-shadow: 0 0 10px var(--color-bocchi);
+}
+
+input:checked + .slider:before {
+    transform: translateX(30px);
+}
+
+/* Estilo do Range Slider (Volume) */
+.range-slider {
+    -webkit-appearance: none;
+    width: 50%;
+    height: 8px;
+    background: #333;
+    outline: none;
+    opacity: 0.7;
+    transition: .2s;
+}
+
+.range-slider:hover { opacity: 1; }
+
+.range-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    background: var(--color-ryo);
+    cursor: pointer;
+    box-shadow: 0 0 10px var(--color-ryo);
+}
+
+#btn-save {
+    width: 100%;
+    margin: 0;
+    border-color: var(--color-ryo);
+}
+
+#btn-save:hover {
+    background: rgba(0, 122, 204, 0.2);
+    box-shadow: 0 0 20px var(--color-ryo);
+}

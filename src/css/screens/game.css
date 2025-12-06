@@ -1,0 +1,307 @@
+/* Container Global da Tela de Jogo */
+.game-screen {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    /* Fundo com imagem escura */
+    background-image: url('../../../assets/images/game_bg.jpg');
+    background-size: cover;
+    background-position: center;
+}
+
+/* Overlay escuro para focar na pista */
+.game-screen::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: radial-gradient(circle, rgba(0,0,0,0.6) 0%, #000 90%);
+    z-index: 0;
+}
+
+/* UI do Topo (Score) */
+.game-ui {
+    position: absolute;
+    top: 30px;
+    left: 50px;
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    font-family: var(--font-display);
+}
+
+.score-box, .combo-box {
+    text-align: left;
+}
+
+.label {
+    font-size: 0.9rem;
+    color: var(--color-ryo);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+}
+
+#score-val {
+    font-size: 2.5rem;
+    color: white;
+    text-shadow: 0 0 15px var(--color-bocchi);
+}
+
+#combo-val {
+    font-size: 3rem;
+    color: var(--color-nijika);
+    text-shadow: 0 0 15px var(--color-nijika);
+}
+
+/* --- A PISTA 3D --- */
+.track-container {
+    position: absolute;
+    left: 50%;
+    bottom: 0;
+    /* O segredo do 3D: Perspective + RotateX */
+    transform: translateX(-50%) perspective(1000px) rotateX(50deg);
+    transform-origin: bottom;
+    
+    width: 500px;
+    height: 100vh; /* Altura total */
+    
+    background: linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(20, 20, 30, 0.9) 40%);
+    border-left: 2px solid var(--color-bocchi);
+    border-right: 2px solid var(--color-bocchi);
+    box-shadow: 0 0 50px rgba(232, 108, 166, 0.1);
+    
+    display: flex;
+    z-index: 10;
+}
+
+/* As 4 Linhas (Lanes) */
+.lane {
+    flex: 1;
+    position: relative;
+    border-right: 1px solid rgba(255,255,255,0.05);
+}
+
+.lane:last-child { border-right: none; }
+
+/* Linha de Hit (Onde aperta) */
+.hit-zone {
+    position: absolute;
+    bottom: 50px; /* Altura da linha */
+    width: 100%;
+    height: 10px;
+    background: rgba(255,255,255,0.1);
+    border-top: 2px solid var(--color-nijika);
+    border-bottom: 2px solid var(--color-nijika);
+    box-shadow: 0 0 15px var(--color-nijika);
+    transition: transform 0.1s, background 0.1s;
+}
+
+/* Efeito ao apertar tecla */
+.hit-active {
+    background: white;
+    box-shadow: 0 0 30px white;
+    transform: scaleY(1.5);
+}
+
+/* Letras (D F J K) */
+.key-hint {
+    position: absolute;
+    bottom: 10px;
+    width: 100%;
+    text-align: center;
+    color: rgba(255,255,255,0.5);
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    transform: skewX(-10deg); /* Estilo */
+}
+
+/* --- AS NOTAS --- */
+/* --- AS NOTAS (OTIMIZADO) --- */
+/* --- AS NOTAS (ULTRA OTIMIZADO) --- */
+.note {
+    position: absolute;
+    left: 5%;
+    top: 0;
+    width: 90%;
+    height: 20px;
+    background: var(--color-bocchi);
+    border-radius: 4px;
+    z-index: 20;
+
+    /* OTIMIZAÇÃO DE HARDWARE */
+    will-change: transform;
+    transform: translate3d(0, -200px, 0); /* Começa fora da tela */
+    
+    /* IMPORTANTE: Desativa transições CSS para não brigar com o JS */
+    transition: none !important; 
+    
+    /* Esconde notas inativas sem remover do DOM (mais rápido) */
+    visibility: hidden; 
+}
+
+/* Quando a nota está em uso */
+.note.active {
+    visibility: visible;
+}
+
+/* Cores */
+.note-center { background: var(--color-ryo); }
+
+/* Efeitos (Simples para performance) */
+.note-hit {
+    opacity: 0;
+    transform: scale(1.5);
+    transition: transform 0.1s, opacity 0.1s !important; /* Aqui pode ter transição curta */
+}
+
+.note-miss {
+    background: #555 !important;
+    opacity: 0.5;
+}
+
+/* Overlay de Contagem */
+.game-overlay {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 999;
+}
+
+.countdown {
+    font-family: var(--font-display);
+    font-size: 10rem;
+    color: white;
+    text-shadow: 0 0 50px var(--color-bocchi);
+}
+
+/* --- SISTEMA DE FEEDBACK VISUAL --- */
+
+#feedback-container {
+    position: absolute;
+    top: 40%; /* Fica no meio da tela, acima da pista */
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 300;
+    pointer-events: none;
+    text-align: center;
+    width: 100%;
+}
+
+.feedback-text {
+    font-family: var(--font-display);
+    font-size: 4rem;
+    font-weight: 900;
+    font-style: italic;
+    text-transform: uppercase;
+    animation: feedbackPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    opacity: 0;
+}
+
+/* Animação de "Pulo" */
+@keyframes feedbackPop {
+    0% { transform: scale(0.5) translateY(20px); opacity: 0; }
+    50% { transform: scale(1.2) translateY(-10px); opacity: 1; }
+    100% { transform: scale(1) translateY(0); opacity: 0; } /* Some no final */
+}
+
+/* Estilos Específicos */
+
+/* PERFECT - Rosa/Dourado Brilhante */
+.feedback-text.perfect {
+    color: #fff;
+    text-shadow: 
+        0 0 10px var(--color-bocchi),
+        0 0 20px var(--color-bocchi),
+        0 0 40px #fff;
+    background: -webkit-linear-gradient(#fff, var(--color-bocchi));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 0 5px rgba(255,255,255,0.5));
+}
+
+/* GOOD - Azul/Verde (Nijika/Ryo) */
+.feedback-text.good {
+    color: var(--color-nijika);
+    text-shadow: 0 0 15px var(--color-nijika);
+    font-size: 3rem; /* Um pouco menor que perfect */
+}
+
+/* MISS - Cinza/Vermelho Tremido */
+.feedback-text.miss {
+    color: #888;
+    text-shadow: 0 0 5px red;
+    font-size: 2.5rem;
+    animation: feedbackShake 0.3s forwards;
+}
+
+@keyframes feedbackShake {
+    0% { transform: translateX(0); opacity: 1; }
+    25% { transform: translateX(-10px); }
+    50% { transform: translateX(10px); }
+    75% { transform: translateX(-10px); }
+    100% { transform: translateX(0); opacity: 0; }
+}
+
+/* =========================================
+   LOW SPEC MODE (MODO LEVE / 2D)
+   ========================================= */
+
+/* Remove o fundo pesado e deixa estático */
+body.low-spec .game-screen {
+    background-image: none;
+    background-color: #111;
+}
+
+/* Remove a perspectiva 3D da pista */
+body.low-spec .track-container {
+    transform: translateX(-50%) scale(1); /* Remove rotateX e perspective */
+    bottom: 20px;
+    height: 95vh;
+    background: #000;
+    border: 2px solid #444;
+    box-shadow: none !important; /* Remove glow da pista */
+}
+
+/* Simplifica as linhas */
+body.low-spec .lane {
+    border-right: 1px solid #333;
+}
+
+/* Simplifica a linha de hit */
+body.low-spec .hit-zone {
+    background: transparent;
+    border-top: 2px solid white;
+    border-bottom: 2px solid white;
+    box-shadow: none !important;
+}
+
+/* Simplifica as notas (Quadrados chapados, sem glow) */
+body.low-spec .note {
+    box-shadow: none !important; /* O MAIOR VILÃO DE PERFORMANCE É O BOX-SHADOW */
+    border: 1px solid rgba(255,255,255,0.5); /* Borda para visibilidade */
+    border-radius: 0;
+}
+
+/* Cores chapadas para as notas */
+body.low-spec .note {
+    background-color: #E86CA6 !important; /* Rosa sólido */
+}
+body.low-spec .note-center {
+    background-color: #007ACC !important; /* Azul sólido */
+}
+
+/* Remove animações pesadas de feedback */
+body.low-spec .feedback-text {
+    text-shadow: none !important;
+    filter: none !important;
+}
+
+/* Remove brilho do score */
+body.low-spec #score-val, 
+body.low-spec #combo-val {
+    text-shadow: none !important;
+}

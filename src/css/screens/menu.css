@@ -1,0 +1,142 @@
+/* src/css/screens/menu.css */
+
+.menu-screen {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start !important; 
+    justify-content: center !important; 
+    padding-left: 10vw; 
+}
+
+/* --- CAMADAS DE FUNDO (BLOQUEADAS PARA CLIQUE) --- */
+
+/* 1. Fundo */
+.menu-bg {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background-image: url('../../../assets/images/menu_bg.png');
+    background-size: cover;
+    background-position: center;
+    z-index: 0; /* Camada mais baixa */
+    filter: blur(3px) brightness(0.6);
+    transform: scale(1.05);
+    pointer-events: none; /* O mouse atravessa aqui */
+}
+
+/* 2. Sombra */
+.menu-overlay {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: linear-gradient(90deg, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.6) 40%, transparent 100%);
+    z-index: 1;
+    pointer-events: none; /* O mouse atravessa aqui */
+}
+
+/* 3. Bocchi */
+.character-container {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    z-index: 2;
+    pointer-events: none; /* O mouse atravessa aqui - CRUCIAL */
+}
+
+.character-container img {
+    position: absolute;
+    bottom: 0;
+    right: 2%;
+    height: 55%;
+    object-fit: contain;
+    filter: drop-shadow(0 0 15px rgba(232, 108, 166, 0.3)); 
+    animation: floatBocchi 8s ease-in-out infinite;
+}
+
+@keyframes floatBocchi {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+
+/* --- CAMADA DE INTERFACE (CLICÁVEL) --- */
+
+.ui-layer {
+    position: relative;
+    z-index: 9999; /* Camada MUITO alta para ficar por cima de tudo */
+    pointer-events: auto; /* Garante clique */
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 20px;
+    max-width: 600px;
+}
+
+.game-title {
+    font-family: var(--font-display);
+    font-size: 6rem;
+    line-height: 0.9;
+    color: #fff;
+    text-transform: uppercase;
+    font-style: italic;
+    text-shadow: 3px 3px 0px var(--color-ryo); 
+    margin-bottom: 5px;
+    transform: skewX(-5deg);
+    text-align: left;
+    pointer-events: none; /* Texto não precisa de clique */
+}
+
+.neon-pink {
+    color: var(--color-bocchi);
+    text-shadow: 0 0 15px var(--color-bocchi);
+}
+
+.subtitle {
+    font-family: var(--font-body);
+    font-size: 1.1rem;
+    letter-spacing: 6px;
+    color: var(--color-nijika);
+    margin-left: 5px;
+    opacity: 0.9;
+    text-transform: uppercase;
+    text-align: left;
+    pointer-events: none;
+}
+
+/* BOTÕES */
+.menu-options {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+    margin-top: 30px;
+    width: 100%;
+}
+
+.btn-primary {
+    width: 300px;
+    text-align: left;
+    padding: 15px 0 15px 30px;
+    background: linear-gradient(90deg, rgba(0,0,0,0.6) 0%, transparent 100%);
+    border-left: 4px solid var(--color-bocchi);
+    border-top: none; border-right: none; border-bottom: none;
+    color: var(--text-white);
+    font-family: var(--font-display);
+    font-size: 1.4rem;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    transform: skewX(-10deg);
+    
+    /* REFORÇO DE CLIQUE */
+    position: relative;
+    z-index: 10000; 
+    pointer-events: auto;
+}
+
+.btn-primary:hover {
+    padding-left: 50px;
+    background: linear-gradient(90deg, var(--color-bocchi) 0%, transparent 100%);
+    color: #fff;
+    box-shadow: 0 0 20px rgba(232, 108, 166, 0.4);
+}
