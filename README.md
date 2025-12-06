@@ -15,12 +15,13 @@ architecture, performance, and visual polish.
 
   
 
-![Project Status](https://img.shields.io/badge/Status-Version_v1.4.0-pink)
+![Project Status](https://img.shields.io/badge/Status-Version_1.5.0-pink)
 
-![Tech](https://img.shields.io/badge/Tech-HTML5_%7C_CSS3_%7C_ES6+-blue)
+![Tech](https://img.shields.io/badge/Tech-HTML5_|_CSS3_|_ES6+-blue)
+
+![Backend](https://img.shields.io/badge/Backend-Firebase-orange)
 
 ![License](https://img.shields.io/badge/License-MIT-green)
-
   
 
 ------------------------------------------------------------------------
@@ -28,6 +29,11 @@ architecture, performance, and visual polish.
   
 
 ## ✨ Features
+
+### 🆕 New in v1.5.0
+- **Online Leaderboard (Arcade Mode):** Integrated with **Firebase Firestore** to save and display global high scores in real-time.
+- **Redesigned Results Screen:** A complete visual overhaul with glassmorphism panels, animated rank stickers, and a polished input interface.
+- **Ranking System:** Dynamic rank calculation (SS, S, A, B, C) based on accuracy.
 
 ### 🆕 New in v1.4.0
 - **Variable Scroll Speed:** Each chart now has a specific note speed (e.g., Hard charts scroll faster than Easy ones).
@@ -154,28 +160,17 @@ Then open **http://localhost:8000** in your browser.
   
 
 kessoku-beat/
-
 │
-
-├── assets/ # Images, audio files, and charts (JSON)
-
+├── assets/             # Images, Audio files, and Charts (JSON)
 ├── src/
-
-│ ├── css/ # Modular styles
-
-│ └── js/ # Modular logic
-
-│ ├── audioEngine.js # Web Audio API wrapper
-
-│ ├── noteSpawner.js # Note pooling and logic
-
-│ ├── router.js # SPA Router
-
-│ ├── storage.js # LocalStorage wrapper
-
-│ └── screens/ # Individual screen logic
-
-└── index.html # Entry point
+│   ├── css/            # Modular styles
+│   └── js/             # Modular logic
+│       ├── firebase.js     # Firestore connection
+│       ├── audioEngine.js  # Web Audio API wrapper
+│       ├── noteSpawner.js  # Game logic & pooling
+│       ├── router.js       # SPA Router
+│       └── screens/        # Individual screen logic
+└── index.html          # Entry point
 
   
 
