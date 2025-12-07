@@ -5,8 +5,8 @@ export default {
             lowSpecMode: false,
             volMusic: 0.5,
             volSfx: 0.5,
-            // --- NOVO: Teclas Padrão (Códigos do Teclado) ---
-            keybinds: ['KeyD', 'KeyF', 'KeyJ', 'KeyK'], 
+            keybinds: ['KeyD', 'KeyF', 'KeyJ', 'KeyK'],
+            selectedCharId: 'bocchi', // <--- NOVO: Personagem padrão
             scores: {}
         };
 

@@ -2,8 +2,25 @@ import Storage from './storage.js';
 
 class AudioEngine {
     constructor() {
+        // Contexto de Áudio (Necessário para análise)
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        this.context = new AudioContext();
+        
+        // Analisador (O cérebro que lê as frequências)
+        this.analyser = this.context.createAnalyser();
+        this.analyser.fftSize = 256; // Precisão da análise (quanto menor, mais rápido)
+        this.dataArray = new Uint8Array(this.analyser.frequencyBinCount);
+
+        // Elemento de Áudio HTML5
         this.bgmAudio = new Audio();
         this.bgmAudio.loop = true;
+        this.bgmAudio.crossOrigin = "anonymous"; // Necessário para analisar áudio local/web
+
+        // Conecta o Áudio ao Analisador e depois aos Alto-falantes
+        this.source = this.context.createMediaElementSource(this.bgmAudio);
+        this.source.connect(this.analyser);
+        this.analyser.connect(this.context.destination);
+
         this.currentBgmUrl = '';
         
         const savedMusic = Storage.get('volMusic');
@@ -14,7 +31,11 @@ class AudioEngine {
     }
 
     playBGM(url, loop = true) {
-        // Se for a mesma música, só garante que está tocando
+        // Retoma o contexto se estiver suspenso (comum em navegadores)
+        if (this.context.state === 'suspended') {
+            this.context.resume();
+        }
+
         if (this.currentBgmUrl === url) {
             if (this.bgmAudio.paused) this.bgmAudio.play();
             return;
@@ -34,19 +55,16 @@ class AudioEngine {
         }
     }
 
-    // --- NOVOS MÉTODOS PARA O PAUSE ---
     pauseBGM() {
-        if (!this.bgmAudio.paused) {
-            this.bgmAudio.pause();
-        }
+        if (!this.bgmAudio.paused) this.bgmAudio.pause();
     }
 
     resumeBGM() {
         if (this.bgmAudio.paused && this.currentBgmUrl) {
+            if (this.context.state === 'suspended') this.context.resume();
             this.bgmAudio.play();
         }
     }
-    // ----------------------------------
 
     stopBGM() {
         this.bgmAudio.pause();
@@ -55,23 +73,13 @@ class AudioEngine {
     }
 
     playSFX(filename) {
-        // Cria o objeto de áudio
+        // SFX não passa pelo analisador para não sujar o visual
         const sfx = new Audio(`./assets/audio/${filename}`);
+        if (isFinite(this.volSfx)) sfx.volume = this.volSfx;
         
-        // Ajusta volume
-        if (isFinite(this.volSfx)) {
-            sfx.volume = this.volSfx;
-        }
-
-        // O segredo para sons rápidos (tiros, hits):
-        // Clona o nó de áudio para permitir sobreposição
-        // (Tocar vários ao mesmo tempo sem cortar)
         const sfxClone = sfx.cloneNode();
         sfxClone.volume = sfx.volume;
-        
-        sfxClone.play().catch(() => {
-            // Ignora erros de autoplay (comuns se o user não interagiu)
-        });
+        sfxClone.play().catch(() => {});
     }
 
     setVolume(type, value) {
@@ -86,6 +94,23 @@ class AudioEngine {
             this.volSfx = safeValue;
             Storage.set('volSfx', safeValue);
         }
+    }
+
+    // --- NOVO: Método para pegar a intensidade do grave (Bass) ---
+    getBassEnergy() {
+        if (this.bgmAudio.paused) return 0;
+        
+        this.analyser.getByteFrequencyData(this.dataArray);
+        
+        // Pega as primeiras frequências (Graves)
+        let sum = 0;
+        // Analisa os primeiros 10 bins (frequências baixas)
+        for (let i = 0; i < 10; i++) {
+            sum += this.dataArray[i];
+        }
+        
+        // Retorna média normalizada (0 a 1)
+        return (sum / 10) / 255;
     }
 }
 

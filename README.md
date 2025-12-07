@@ -15,7 +15,7 @@ architecture, performance, and visual polish.
 
   
 
-![Project Status](https://img.shields.io/badge/Status-Version_2.0.0-pink)
+![Project Status](https://img.shields.io/badge/Status-Version_3.0.0-pink)
 
 ![Tech](https://img.shields.io/badge/Tech-HTML5_|_CSS3_|_ES6+-blue)
 
@@ -29,6 +29,16 @@ architecture, performance, and visual polish.
   
 
 ## ✨ Features
+
+### 🆕 New in v3.0.0 (Kessoku Assemble Update)
+- **Character System:** Choose your favorite member of Kessoku Band! Each character has unique voice lines, backgrounds, and gameplay buffs:
+  - **🎸 Hitori Gotoh:** *Fever Boost* (Gauge fills 50% faster).
+  - **🥁 Nijika Ijichi:** *Safety Net* (First 3 misses don't break combo/HP).
+  - **🌿 Ryo Yamada:** *Score Boost* (Passive +10% score multiplier).
+  - **✨ Ikuyo Kita:** *Extended Fever* (Fever mode lasts 15s instead of 8s).
+- **Dynamic Theming:** The entire game UI (lanes, notes, text, glow) changes color based on the selected character.
+- **HP System:** Added a Life Bar. Missing notes depletes HP, hitting notes recovers it. Reaching 0% results in Game Over.
+- **Cinematic Intro:** New stylish song introduction sequence before gameplay starts.
 
 ### 🆕 New in v2.0.0 (The "Overdrive" Update)
 - **Fever System (Kessoku Charge):** Fill the gauge and press `SPACE` to double your score with a flashy "Kita-Aura" cut-in animation.
@@ -50,6 +60,7 @@ architecture, performance, and visual polish.
   - **GPU Acceleration:** Uses `translate3d` for smooth note movement.
 - **Reactive UI:** SPA (Single Page Application) architecture with cinematic transitions and glassmorphism.
 - **Dynamic Audio:** Independent volume control (BGM/SFX) and interactive sound effects.
+- **Online Leaderboard (Arcade Mode):** Integrated with **Firebase Firestore** to save and display global high scores.
 
   
 

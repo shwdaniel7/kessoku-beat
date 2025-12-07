@@ -2,34 +2,52 @@ import Router from '../router.js';
 import AudioEngine from '../audioEngine.js';
 import NoteSpawner from '../noteSpawner.js';
 import Storage from '../storage.js';
+import { characters } from '../data/characters.js';
+import { songList } from './select.js';
 
 export default class GameScreen {
     constructor(params) {
+        // Identificadores
         this.songId = params.songId || 'song1';
         this.chartId = params.chartId || 'song1_hard';
         this.noteSpeed = params.noteSpeed || 1.3;
         this.mods = params.mods || { auto: false, sudden: false, speedUp: false };
         
+        // Dados da Música (para Intro)
+        this.songData = songList.find(s => s.id === this.songId) || { title: 'Unknown', artist: 'Unknown', cover: '' };
+
+        // Estado do Jogo
         this.score = 0;
         this.combo = 0;
         this.maxCombo = 0;
         this.hits = { perfect: 0, good: 0, miss: 0 };
         
-        // Fever
+        // Sistema de HP
+        this.hp = 100;
+        this.maxHp = 100;
+        
+        // Carrega Personagem
+        const charId = Storage.get('selectedCharId') || 'bocchi';
+        this.character = characters.find(c => c.id === charId) || characters[0];
+        
+        // Buffs Específicos
+        this.nijikaSafetyCount = 3; // Nijika
+        
+        // Fever System
         this.fever = 0;
         this.maxFever = 100;
         this.isFeverActive = false;
-        this.feverDuration = 8000;
+        this.feverDuration = (this.character.buffId === 'long_fever') ? 15000 : 8000; // Kita Buff
 
         this.isPlaying = false;
         this.isPaused = false;
         this.spawner = null;
         this.startTimeout = null;
+        this.visualLoopActive = false;
         
         this.keybinds = Storage.get('keybinds') || ['KeyD', 'KeyF', 'KeyJ', 'KeyK'];
 
-        // --- CORREÇÃO DO NaN ---
-        // Padronizei tudo para 'scoreMultiplier'
+        // Multiplicador de Score (Mods)
         this.scoreMultiplier = 1.0;
         if (!this.mods.auto) {
             if (this.mods.speedUp) this.scoreMultiplier += 0.1;
@@ -42,10 +60,28 @@ export default class GameScreen {
         if (this.mods.auto) modsText += " [AUTO]";
         if (this.mods.sudden) modsText += " [SUDDEN]";
         if (this.mods.speedUp) modsText += " [SPEED UP]";
+        modsText += ` | CHAR: ${this.character.name.split(' ')[0].toUpperCase()}`;
 
         return `
             <div class="screen-container game-screen" id="game-screen-el">
-                <div class="game-ui">
+                
+                <!-- INTRO CINEMATOGRÁFICA -->
+                <div class="cinematic-intro" id="cinematic-intro">
+                    <div class="intro-content">
+                        <div class="intro-cover">
+                            <img src="./assets/images/${this.songData.cover}" alt="Cover">
+                        </div>
+                        <div class="intro-text">
+                            <h1 class="intro-title">${this.songData.title}</h1>
+                            <h2 class="intro-artist">${this.songData.artist}</h2>
+                            <div class="intro-line"></div>
+                        </div>
+                    </div>
+                    <div class="intro-ready" id="intro-ready">READY</div>
+                </div>
+
+                <!-- UI DO JOGO -->
+                <div class="game-ui fade-in-target">
                     <div class="score-box">
                         <span class="label">SCORE</span>
                         <span id="score-val">0</span>
@@ -56,34 +92,39 @@ export default class GameScreen {
                     </div>
                 </div>
                 
-                <!-- KITA CUT-IN (GIF) -->
+                <!-- BARRA DE VIDA (HP) -->
+                <div class="hp-container fade-in-target">
+                    <div class="hp-label">LIFE</div>
+                    <div class="hp-bar-bg">
+                        <div class="hp-bar-fill" id="hp-fill" style="height: 100%;"></div>
+                    </div>
+                </div>
+
+                <!-- FEVER & CUT-IN -->
                 <div class="kita-cutin" id="kita-cutin">
-                    <!-- Mudei para .gif aqui -->
                     <img src="./assets/images/kita_fever.gif" alt="Kita Aura">
                 </div>
 
-                <div class="fever-container" id="fever-container">
+                <div class="fever-container fade-in-target" id="fever-container">
                     <div class="fever-fill" id="fever-fill"></div>
                     <div class="fever-text">SPACE!</div>
                 </div>
 
-                <div style="position: absolute; top: 10px; width: 100%; text-align: center; color: #aaa; font-family: var(--font-display); font-size: 0.8rem; letter-spacing: 2px; z-index: 50;">
+                <div class="mods-indicator fade-in-target" style="position: absolute; top: 10px; width: 100%; text-align: center; color: #aaa; font-family: var(--font-display); font-size: 0.8rem; letter-spacing: 2px; z-index: 50;">
                     ${modsText}
                 </div>
 
                 <div id="feedback-container"></div>
                 
-                <div class="track-container">
+                <!-- PISTA -->
+                <div class="track-container fade-in-target">
                     <div class="lane" id="lane-0"><div class="lane-beam"></div><div class="key-hint"></div><div class="hit-zone"></div></div>
                     <div class="lane" id="lane-1"><div class="lane-beam"></div><div class="key-hint"></div><div class="hit-zone"></div></div>
                     <div class="lane" id="lane-2"><div class="lane-beam"></div><div class="key-hint"></div><div class="hit-zone"></div></div>
                     <div class="lane" id="lane-3"><div class="lane-beam"></div><div class="key-hint"></div><div class="hit-zone"></div></div>
                 </div>
 
-                <div class="game-overlay" id="start-overlay">
-                    <div class="countdown">READY</div>
-                </div>
-
+                <!-- OVERLAYS -->
                 <div class="game-overlay" id="pause-overlay" style="display: none;">
                     <div class="pause-menu">
                         <h2>PAUSED</h2>
@@ -93,10 +134,10 @@ export default class GameScreen {
                     </div>
                 </div>
 
-                <div class="game-overlay" id="fail-overlay" style="display: none; background: rgba(50, 0, 0, 0.9);">
+                <div class="game-overlay" id="fail-overlay" style="display: none;">
                     <div class="pause-menu" style="border-color: red; box-shadow: 0 0 50px red;">
                         <h2 style="color: red; text-shadow: none;">FAILED</h2>
-                        <p style="color: white; margin-bottom: 20px; font-family: var(--font-display);">SUDDEN DEATH</p>
+                        <p style="color: white; margin-bottom: 20px; font-family: var(--font-display);" id="fail-reason">HP DEPLETED</p>
                         <button id="btn-fail-retry" class="btn-primary">TRY AGAIN</button>
                         <button id="btn-fail-quit" class="btn-primary">GIVE UP</button>
                     </div>
@@ -106,9 +147,13 @@ export default class GameScreen {
     }
 
     init() {
+        // 1. Aplica Tema do Personagem
+        this.applyTheme();
+
         this.spawner = new NoteSpawner(this.chartId, this, this.noteSpeed, this.mods);
         this.updateKeyHints();
 
+        // Bindings
         this.handleKeyDownBound = (e) => {
             if (e.key === 'Escape') this.togglePause();
             else if (e.code === 'Space') this.activateFever();
@@ -119,15 +164,93 @@ export default class GameScreen {
         document.addEventListener('keydown', this.handleKeyDownBound);
         document.addEventListener('keyup', this.handleKeyUpBound);
 
+        // Botões
         document.getElementById('btn-resume').addEventListener('click', () => this.togglePause());
         document.getElementById('btn-retry').addEventListener('click', () => this.restart());
         document.getElementById('btn-fail-retry').addEventListener('click', () => this.restart());
         document.getElementById('btn-quit').addEventListener('click', () => this.quit());
         document.getElementById('btn-fail-quit').addEventListener('click', () => this.quit());
 
-        this.startCountdown();
+        // Inicia Loop Visual (Bass Pulse)
+        this.visualLoopActive = true;
+        this.updateVisuals();
+
+        // Inicia Sequência
+        this.playCinematicIntro();
     }
 
+    // --- DYNAMIC THEMING ---
+    applyTheme() {
+        const themeColor = this.character.color;
+        document.documentElement.style.setProperty('--theme-color', themeColor);
+        console.log(`🎨 Tema aplicado: ${this.character.name} (${themeColor})`);
+    }
+
+    // --- AUDIO VISUALIZER ---
+    updateVisuals() {
+        if (!this.visualLoopActive) return;
+
+        if (!document.body.classList.contains('low-spec')) {
+            const bass = AudioEngine.getBassEnergy();
+            const bg = document.querySelector('.game-screen');
+            
+            if (bg) {
+                // Zoom sutil no fundo com a batida
+                bg.style.backgroundSize = `${100 + (bass * 5)}%`; 
+            }
+        }
+        requestAnimationFrame(() => this.updateVisuals());
+    }
+
+    // --- CINEMATIC INTRO ---
+    playCinematicIntro() {
+        const intro = document.getElementById('cinematic-intro');
+        const readyText = document.getElementById('intro-ready');
+        const gameElements = document.querySelectorAll('.fade-in-target');
+
+        this.startTimeout = setTimeout(() => {
+            readyText.style.opacity = '1';
+            readyText.style.transform = 'scale(1)';
+            AudioEngine.playSFX('hover.mp3');
+        }, 1500);
+
+        setTimeout(() => {
+            intro.style.opacity = '0';
+            intro.style.pointerEvents = 'none';
+            gameElements.forEach(el => el.classList.add('visible'));
+        }, 2500);
+
+        setTimeout(() => {
+            this.startGame();
+        }, 3000);
+    }
+
+    startGame() {
+        console.log("GO!");
+        this.isPlaying = true;
+        const audioPath = `./assets/audio/${this.songId}.mp3`;
+        this.spawner.start(audioPath);
+    }
+
+    // --- HP SYSTEM ---
+    updateHP(amount) {
+        if (this.mods.auto) return;
+
+        this.hp = Math.min(this.maxHp, this.hp + amount);
+        
+        const hpFill = document.getElementById('hp-fill');
+        if (hpFill) {
+            hpFill.style.height = `${this.hp}%`;
+            if (this.hp < 30) hpFill.classList.add('danger');
+            else hpFill.classList.remove('danger');
+        }
+
+        if (this.hp <= 0) {
+            this.failGame("HP DEPLETED");
+        }
+    }
+
+    // --- FEVER SYSTEM ---
     activateFever() {
         if (this.isPaused || !this.isPlaying) return;
 
@@ -164,90 +287,84 @@ export default class GameScreen {
 
     updateFever(amount) {
         if (this.isFeverActive) return;
-
         this.fever = Math.min(this.maxFever, this.fever + amount);
-        
         const fill = document.getElementById('fever-fill');
         const container = document.getElementById('fever-container');
-        
         if (fill) fill.style.height = `${this.fever}%`;
-
-        if (this.fever >= this.maxFever) {
-            container.classList.add('fever-ready');
-        } else {
-            container.classList.remove('fever-ready');
-        }
+        if (this.fever >= this.maxFever) container.classList.add('fever-ready');
+        else container.classList.remove('fever-ready');
     }
 
-    updateKeyHints() {
-        const hints = document.querySelectorAll('.key-hint');
-        this.keybinds.forEach((code, index) => {
-            if (hints[index]) {
-                hints[index].innerText = code.replace('Key', '').replace('Digit', '');
+    // --- SCORE & GAMEPLAY ---
+    updateScore(points, type) {
+        if (type === 'PERFECT') this.hits.perfect++;
+        if (type === 'GOOD') this.hits.good++;
+        if (type === 'MISS') this.hits.miss++;
+
+        if (type === 'MISS') {
+            // Buff Nijika
+            if (this.character.buffId === 'safety_net' && this.nijikaSafetyCount > 0) {
+                this.nijikaSafetyCount--;
+                this.showFeedback('SAVED!');
+                return;
             }
-        });
-    }
 
-    restart() {
-        this.destroy();
-        Router.navigate('game', { 
-            songId: this.songId, 
-            chartId: this.chartId,
-            noteSpeed: this.noteSpeed,
-            mods: this.mods 
-        });
-    }
+            this.combo = 0;
+            const comboEl = document.getElementById('combo-val');
+            comboEl.style.color = '#555';
+            comboEl.classList.remove('combo-pulse');
+            
+            const screen = document.getElementById('game-screen-el');
+            if (screen) screen.classList.remove('aura-1', 'aura-2');
+            
+            this.updateFever(-10);
+            this.updateHP(-10); // Dano
 
-    quit() {
-        this.destroy();
-        AudioEngine.playBGM(`./assets/audio/${this.songId}.mp3`, true);
-        Router.navigate('select');
-    }
-
-    togglePause() {
-        if (document.getElementById('start-overlay').style.display !== 'none') return;
-        if (document.getElementById('fail-overlay').style.display !== 'none') return;
-
-        this.isPaused = !this.isPaused;
-        const overlay = document.getElementById('pause-overlay');
-
-        if (this.isPaused) {
-            overlay.style.display = 'flex';
-            AudioEngine.pauseBGM();
-            this.spawner.isPlaying = false;
         } else {
-            overlay.style.display = 'none';
-            AudioEngine.resumeBGM();
-            this.spawner.isPlaying = true;
-            this.spawner.loop();
-        }
-    }
+            let hitScore = points + (this.combo * 10);
+            
+            // Buff Ryo
+            if (this.character.buffId === 'score_boost') hitScore = Math.round(hitScore * 1.1);
+            
+            hitScore = Math.round(hitScore * this.scoreMultiplier);
 
-    startCountdown() {
-        const overlay = document.querySelector('.countdown');
-        let count = 3;
-        const timer = setInterval(() => {
-            if (count > 0) {
-                overlay.innerText = count;
-                AudioEngine.playSFX('hover.mp3');
-                count--;
-            } else {
-                clearInterval(timer);
-                document.getElementById('start-overlay').style.display = 'none';
-                this.startGame();
+            if (this.isFeverActive) hitScore *= 2;
+
+            this.score += hitScore;
+            this.combo++;
+            if (this.combo > this.maxCombo) this.maxCombo = this.combo;
+
+            // Buff Bocchi
+            let feverGain = (type === 'PERFECT') ? 2 : 1;
+            if (this.character.buffId === 'fever_boost') feverGain = Math.round(feverGain * 1.5);
+            this.updateFever(feverGain);
+
+            // Cura HP
+            const heal = (type === 'PERFECT') ? 2 : 1;
+            this.updateHP(heal);
+
+            const comboEl = document.getElementById('combo-val');
+            comboEl.classList.remove('combo-pulse');
+            void comboEl.offsetWidth;
+            comboEl.classList.add('combo-pulse');
+            comboEl.style.color = 'var(--theme-color)'; // Usa cor do tema
+
+            const screen = document.getElementById('game-screen-el');
+            if (screen) {
+                if (this.combo >= 100) {
+                    screen.classList.add('aura-2');
+                    screen.classList.remove('aura-1');
+                } else if (this.combo >= 50) {
+                    screen.classList.add('aura-1');
+                }
             }
-        }, 1000);
+        }
+        
+        document.getElementById('score-val').innerText = this.score;
+        document.getElementById('combo-val').innerText = this.combo;
     }
 
-    startGame() {
-        console.log("Preparando...");
-        this.startTimeout = setTimeout(() => {
-            this.isPlaying = true;
-            const audioPath = `./assets/audio/${this.songId}.mp3`;
-            this.spawner.start(audioPath);
-        }, 1500);
-    }
-
+    // --- INPUT HANDLING ---
     handleInput(e) {
         if (this.mods.auto) return;
         if (!this.isPlaying || this.isPaused || e.repeat) return;
@@ -329,64 +446,19 @@ export default class GameScreen {
         setTimeout(() => { if (el.parentNode) el.remove(); }, 500);
     }
 
-    updateScore(points, type) {
-        if (type === 'PERFECT') this.hits.perfect++;
-        if (type === 'GOOD') this.hits.good++;
-        if (type === 'MISS') this.hits.miss++;
-
-        if (type === 'MISS') {
-            this.combo = 0;
-            const comboEl = document.getElementById('combo-val');
-            comboEl.style.color = '#555';
-            comboEl.classList.remove('combo-pulse');
-            
-            const screen = document.getElementById('game-screen-el');
-            if (screen) screen.classList.remove('aura-1', 'aura-2');
-            
-            this.updateFever(-10);
-
-        } else {
-            let hitScore = points + (this.combo * 10);
-            
-            // --- CORREÇÃO DO NAN ---
-            // Agora usamos a variável correta 'scoreMultiplier'
-            hitScore = Math.round(hitScore * this.scoreMultiplier);
-
-            if (this.isFeverActive) {
-                hitScore *= 2;
-            }
-
-            this.score += hitScore;
-            this.combo++;
-            if (this.combo > this.maxCombo) this.maxCombo = this.combo;
-
-            const feverGain = (type === 'PERFECT') ? 2 : 1;
-            this.updateFever(feverGain);
-
-            const comboEl = document.getElementById('combo-val');
-            comboEl.classList.remove('combo-pulse');
-            void comboEl.offsetWidth;
-            comboEl.classList.add('combo-pulse');
-            comboEl.style.color = 'var(--color-nijika)';
-
-            const screen = document.getElementById('game-screen-el');
-            if (screen) {
-                if (this.combo >= 100) {
-                    screen.classList.add('aura-2');
-                    screen.classList.remove('aura-1');
-                } else if (this.combo >= 50) {
-                    screen.classList.add('aura-1');
-                }
-            }
-        }
-        
-        document.getElementById('score-val').innerText = this.score;
-        document.getElementById('combo-val').innerText = this.combo;
+    updateKeyHints() {
+        const hints = document.querySelectorAll('.key-hint');
+        this.keybinds.forEach((code, index) => {
+            if (hints[index]) hints[index].innerText = code.replace('Key', '').replace('Digit', '');
+        });
     }
 
-    failGame() {
+    // --- FLOW CONTROL ---
+    failGame(reason = "SUDDEN DEATH") {
         this.isPlaying = false;
         AudioEngine.stopBGM();
+        const reasonEl = document.getElementById('fail-reason');
+        if (reasonEl) reasonEl.innerText = reason;
         document.getElementById('fail-overlay').style.display = 'flex';
     }
 
@@ -421,10 +493,46 @@ export default class GameScreen {
         return 'C';
     }
 
+    restart() {
+        this.destroy();
+        Router.navigate('game', { songId: this.songId, chartId: this.chartId, noteSpeed: this.noteSpeed, mods: this.mods });
+    }
+
+    quit() {
+        this.destroy();
+        AudioEngine.playBGM(`./assets/audio/${this.songId}.mp3`, true);
+        Router.navigate('select');
+    }
+
+    togglePause() {
+        if (document.getElementById('cinematic-intro').style.opacity !== '0') return;
+        if (document.getElementById('fail-overlay').style.display !== 'none') return;
+
+        this.isPaused = !this.isPaused;
+        const overlay = document.getElementById('pause-overlay');
+
+        if (this.isPaused) {
+            overlay.style.display = 'flex';
+            AudioEngine.pauseBGM();
+            this.spawner.isPlaying = false;
+        } else {
+            overlay.style.display = 'none';
+            AudioEngine.resumeBGM();
+            this.spawner.isPlaying = true;
+            this.spawner.loop();
+        }
+    }
+
     destroy() {
+        this.visualLoopActive = false;
+        
+        // Reseta o tema para o padrão (Rosa) ao sair
+        document.documentElement.style.setProperty('--theme-color', '#E86CA6');
+
         if (this.startTimeout) clearTimeout(this.startTimeout);
         if (this.spawner) this.spawner.stop();
         AudioEngine.stopBGM();
+        
         document.removeEventListener('keydown', this.handleKeyDownBound);
         document.removeEventListener('keyup', this.handleKeyUpBound);
     }

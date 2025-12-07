@@ -1,0 +1,221 @@
+/* src/css/screens/charSelect.css */
+
+.char-select-screen {
+    position: relative;
+    width: 100%; height: 100%;
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden;
+}
+
+/* --- FUNDO COM IMAGEM --- */
+.char-select-bg {
+    position: absolute; 
+    top: 0; 
+    left: 0; 
+    width: 100%; 
+    height: 100%;
+    
+    /* Imagem padrão caso não carregue */
+    background-image: url('../../../assets/images/menu_bg.png'); 
+    background-size: cover;
+    background-position: center;
+    
+    /* Filtros para dar destaque aos cards */
+    filter: blur(5px) brightness(0.6); 
+    transform: scale(1.1);
+    z-index: 0;
+    
+    /* --- A MÁGICA DA TRANSIÇÃO --- */
+    transition: background-image 0.5s ease-in-out;
+}
+
+.screen-overlay {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    background: radial-gradient(circle, rgba(0,0,0,0.2) 0%, #000 100%);
+    z-index: 1;
+    pointer-events: none; /* IMPORTANTE: Deixa o clique passar */
+}
+
+.content-wrapper {
+    position: relative; 
+    z-index: 10;
+    display: flex; flex-direction: column; align-items: center;
+    width: 100%; height: 100%; justify-content: center;
+}
+
+.screen-title {
+    font-family: var(--font-display);
+    font-size: 3rem; color: white;
+    text-shadow: 0 0 20px var(--color-ryo);
+    letter-spacing: 5px; margin-bottom: 40px;
+    text-transform: uppercase;
+}
+
+/* --- CARDS --- */
+.char-container {
+    display: flex; 
+    gap: 25px; 
+    z-index: 20; /* Garante que fique acima de tudo */
+    perspective: 1000px;
+}
+
+.char-card {
+    position: relative;
+    width: 240px; height: 450px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 15px;
+    cursor: pointer;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    display: flex; flex-direction: column;
+    backdrop-filter: blur(10px);
+    
+    /* Garante clique */
+    pointer-events: auto; 
+}
+
+.char-card:hover {
+    transform: translateY(-15px);
+    border-color: rgba(255,255,255,0.5);
+    background: rgba(255,255,255,0.1);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+
+.char-card.active {
+    transform: scale(1.05) translateY(-15px);
+    border-color: var(--char-color);
+    box-shadow: 0 0 40px var(--char-color);
+    background: linear-gradient(to bottom, rgba(20,20,30,0.9), rgba(0,0,0,0.8));
+    z-index: 5;
+}
+
+.char-img {
+    height: 65%; width: 100%;
+    display: flex; justify-content: center; align-items: flex-end;
+    z-index: 2; overflow: hidden;
+    padding-bottom: 10px;
+}
+
+.char-img img {
+    height: 95%; width: auto;
+    object-fit: contain;
+    transition: transform 0.3s;
+    filter: drop-shadow(0 0 10px rgba(0,0,0,0.5));
+}
+
+.char-card.active .char-img img {
+    transform: scale(1.1);
+    filter: drop-shadow(0 0 20px var(--char-color));
+}
+
+.char-info {
+    padding: 20px;
+    text-align: center;
+    z-index: 2;
+    background: rgba(0,0,0,0.8);
+    flex-grow: 1;
+    display: flex; flex-direction: column; justify-content: center;
+    border-top: 1px solid rgba(255,255,255,0.1);
+}
+
+.char-name {
+    font-family: var(--font-display);
+    color: var(--char-color);
+    font-size: 1.3rem;
+    margin-bottom: 5px;
+    text-transform: uppercase;
+    line-height: 1;
+}
+
+.char-role {
+    font-family: var(--font-body);
+    color: #aaa;
+    font-size: 0.8rem;
+    display: block;
+    margin-bottom: 10px;
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
+.char-desc {
+    font-family: var(--font-body);
+    color: white;
+    font-size: 0.8rem;
+    line-height: 1.3;
+    opacity: 0.9;
+}
+
+/* Efeito de brilho no fundo do card */
+.char-bg {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    background: var(--char-color);
+    opacity: 0; z-index: 0;
+    transition: opacity 0.3s;
+}
+
+.char-card.active .char-bg { opacity: 0.15; }
+
+/* Rodapé */
+.footer-controls {
+    margin-top: 40px;
+    width: 80%;
+    display: flex; justify-content: space-between; align-items: center;
+    z-index: 20;
+}
+
+.btn-text {
+    background: none; border: none; color: white;
+    font-family: var(--font-display); font-size: 1.2rem;
+    cursor: pointer; opacity: 0.7; transition: 0.3s;
+}
+.btn-text:hover { opacity: 1; text-shadow: 0 0 10px white; }
+
+#btn-confirm {
+    width: 200px;
+    font-size: 1.2rem;
+    padding: 12px 0;
+    margin: 0;
+    transform: skewX(-10deg);
+}
+
+/* --- ANIMAÇÃO DE CONFIRMAÇÃO --- */
+
+/* O Card Escolhido */
+.char-card.confirmed {
+    transform: scale(1.15) translateY(-30px) !important;
+    z-index: 100 !important;
+    box-shadow: 
+        0 0 60px var(--char-color),
+        0 0 100px var(--char-color) !important;
+    border-color: #fff !important;
+    background: linear-gradient(to bottom, rgba(255,255,255,0.1), rgba(0,0,0,0.8));
+    animation: cardPulse 0.5s infinite alternate;
+}
+
+/* Faz a imagem brilhar também */
+.char-card.confirmed .char-img img {
+    filter: drop-shadow(0 0 30px var(--char-color)) brightness(1.2);
+    transform: scale(1.2);
+}
+
+/* Animação de Pulsar */
+@keyframes cardPulse {
+    from { box-shadow: 0 0 60px var(--char-color); }
+    to { box-shadow: 0 0 100px var(--char-color), 0 0 20px #fff; }
+}
+
+/* Os outros cards (Não escolhidos) */
+.char-card.dimmed {
+    opacity: 0.2;
+    filter: grayscale(1);
+    transform: scale(0.9);
+    pointer-events: none; /* Bloqueia clique */
+}
+
+/* Esconde a UI durante a animação para ficar cinematográfico */
+.ui-hidden {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.5s;
+}

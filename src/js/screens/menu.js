@@ -58,7 +58,7 @@ export default class MenuScreen {
 
         // 3. Configurar Navegação
         document.getElementById('btn-play').addEventListener('click', () => {
-            Router.navigate('select');
+            Router.navigate('charSelect'); // Mudou aqui
         });
 
         document.getElementById('btn-tutorial').addEventListener('click', () => {

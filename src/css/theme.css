@@ -5,6 +5,8 @@
     --color-nijika: #F2D64B; /* Yellow */
     --color-ryo: #007ACC;    /* Blue */
     
+    --theme-color: var(--color-bocchi); 
+
     /* UI Colors */
     --bg-dark: #0a0a12;
     --bg-panel: rgba(20, 20, 30, 0.85);

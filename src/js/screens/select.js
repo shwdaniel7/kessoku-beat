@@ -22,7 +22,7 @@ export const songList = [
         cover: 'cover2.jpg',
         locked: false,
         charts: [
-            { label: 'NORMAL', file: 'song2_normal', level: 8, color: '#2196F3', speed: 1.4 }
+            { label: 'NORMAL', file: 'song2_medium', level: 8, color: '#2196F3', speed: 1.4 }
         ]
     },
     {
