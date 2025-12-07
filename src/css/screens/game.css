@@ -377,3 +377,186 @@ body.low-spec #combo-val {
     border-color: red !important;
     transform: scaleY(0.8) !important; /* Efeito de "amassar" */
 }
+
+/* =========================================
+   VISUAL OVERHAUL (V2.0)
+   ========================================= */
+
+/* --- LANE BEAMS (Canhões de Luz) --- */
+.lane-beam {
+    position: absolute;
+    bottom: 50px; /* Começa na linha de hit */
+    left: 0;
+    width: 100%;
+    height: 0%; /* Começa invisível */
+    background: linear-gradient(to top, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0) 100%);
+    pointer-events: none;
+    z-index: 5;
+    transition: height 0.1s ease-out, opacity 0.1s ease-out;
+    opacity: 0;
+}
+
+/* Quando ativo */
+.beam-active {
+    height: 80% !important; /* Sobe até quase o topo */
+    opacity: 1 !important;
+}
+
+/* Cores específicas por Lane (Opcional, mas fica lindo) */
+#lane-0 .lane-beam { background: linear-gradient(to top, rgba(232, 108, 166, 0.6) 0%, transparent 100%); } /* Bocchi */
+#lane-1 .lane-beam { background: linear-gradient(to top, rgba(230, 62, 62, 0.6) 0%, transparent 100%); }   /* Kita */
+#lane-2 .lane-beam { background: linear-gradient(to top, rgba(0, 122, 204, 0.6) 0%, transparent 100%); }   /* Ryo */
+#lane-3 .lane-beam { background: linear-gradient(to top, rgba(242, 214, 75, 0.6) 0%, transparent 100%); }  /* Nijika */
+
+/* --- COMBO AURA (Vignette Dinâmica) --- */
+.game-screen::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 200;
+    box-shadow: inset 0 0 0px rgba(0,0,0,0);
+    transition: box-shadow 0.5s ease;
+}
+
+/* Nível 1: Combo 50+ (Azul Ryo Cool) */
+.game-screen.aura-1::after {
+    box-shadow: inset 0 0 50px rgba(0, 122, 204, 0.3);
+}
+
+/* Nível 2: Combo 100+ (Rosa Bocchi Power) */
+.game-screen.aura-2::after {
+    box-shadow: inset 0 0 100px rgba(232, 108, 166, 0.5), inset 0 0 20px rgba(255, 255, 255, 0.2);
+    animation: auraPulse 2s infinite;
+}
+
+@keyframes auraPulse {
+    0% { opacity: 0.8; }
+    50% { opacity: 1; }
+    100% { opacity: 0.8; }
+}
+
+/* --- LOW SPEC MODE (Desliga tudo isso) --- */
+body.low-spec .lane-beam { display: none !important; }
+body.low-spec .game-screen::after { display: none !important; }
+
+/* =========================================
+   FEVER / OVERDRIVE SYSTEM
+   ========================================= */
+
+/* Container da Barra */
+.fever-container {
+    position: absolute;
+    right: 50px; /* Fica na direita */
+    top: 50%;
+    transform: translateY(-50%);
+    width: 30px;
+    height: 400px;
+    background: rgba(0, 0, 0, 0.8);
+    border: 2px solid #555;
+    border-radius: 15px;
+    overflow: hidden;
+    z-index: 100;
+    box-shadow: 0 0 20px rgba(0,0,0,0.5);
+}
+
+/* O líquido da barra (enche de baixo pra cima) */
+.fever-fill {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 0%; /* JS vai mudar isso */
+    background: linear-gradient(to top, var(--color-ryo), var(--color-bocchi));
+    transition: height 0.2s ease-out;
+    box-shadow: 0 0 20px var(--color-bocchi);
+}
+
+/* Texto "READY" quando enche */
+.fever-text {
+    position: absolute;
+    bottom: -50px; /* Escondido */
+    right: 35px;
+    font-family: var(--font-display);
+    color: #fff;
+    font-size: 1.5rem;
+    text-shadow: 0 0 10px gold;
+    white-space: nowrap;
+    transition: bottom 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* Estado: PRONTO PARA ATIVAR */
+.fever-ready .fever-fill {
+    background: linear-gradient(to top, gold, orange);
+    box-shadow: 0 0 30px gold;
+    animation: feverPulse 0.5s infinite alternate;
+}
+
+.fever-ready .fever-text {
+    bottom: 50%; /* Sobe para o meio */
+    transform: translateY(50%);
+}
+
+@keyframes feverPulse {
+    from { opacity: 0.8; box-shadow: 0 0 20px gold; }
+    to { opacity: 1; box-shadow: 0 0 50px gold; }
+}
+
+/* Estado: ATIVADO (DURANTE O FEVER) */
+.game-screen.fever-active .track-container {
+    border-color: gold;
+    box-shadow: 0 0 80px rgba(255, 215, 0, 0.4);
+}
+
+.game-screen.fever-active .hit-zone {
+    border-color: gold;
+    box-shadow: 0 0 30px gold;
+}
+
+.game-screen.fever-active .fever-fill {
+    background: white;
+    box-shadow: 0 0 40px white;
+}
+
+/* Low Spec: Esconde a barra para não pesar */
+body.low-spec .fever-container { display: none; }
+
+/* --- KITA AURA CUT-IN --- */
+.kita-cutin {
+    position: absolute;
+    bottom: 0;
+    right: -500px; /* Estado inicial (fora da tela) */
+    width: 500px;
+    height: auto;
+    z-index: 90;
+    pointer-events: none;
+    opacity: 0;
+    
+    /* TRANSIÇÃO DE SAÍDA (Suave e mais lenta) */
+    transition: right 0.8s ease-in-out, opacity 0.5s ease-in-out;
+}
+
+.kita-cutin img {
+    width: 100%;
+    height: auto;
+    filter: drop-shadow(0 0 30px gold) drop-shadow(0 0 10px white);
+    animation: kitaFloat 2s infinite ease-in-out;
+}
+
+/* Classe para ativar */
+.kita-cutin.active {
+    /* Posição final (dentro da tela) */
+    right: 150px; 
+    opacity: 1;
+    
+    /* TRANSIÇÃO DE ENTRADA (Rápida e elástica) */
+    transition: right 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.2s ease-out;
+}
+
+@keyframes kitaFloat {
+    0%, 100% { transform: translateY(0) scale(1); }
+    50% { transform: translateY(-10px) scale(1.02); }
+}
+
+/* Low Spec: Não mostra para economizar */
+body.low-spec .kita-cutin { display: none; }

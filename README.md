@@ -15,7 +15,7 @@ architecture, performance, and visual polish.
 
   
 
-![Project Status](https://img.shields.io/badge/Status-Version_1.5.0-pink)
+![Project Status](https://img.shields.io/badge/Status-Version_2.0.0-pink)
 
 ![Tech](https://img.shields.io/badge/Tech-HTML5_|_CSS3_|_ES6+-blue)
 
@@ -30,33 +30,15 @@ architecture, performance, and visual polish.
 
 ## ✨ Features
 
-### 🆕 New in v1.5.0
-- **Online Leaderboard (Arcade Mode):** Integrated with **Firebase Firestore** to save and display global high scores in real-time.
-- **Redesigned Results Screen:** A complete visual overhaul with glassmorphism panels, animated rank stickers, and a polished input interface.
-- **Ranking System:** Dynamic rank calculation (SS, S, A, B, C) based on accuracy.
-
-### 🆕 New in v1.4.0
-- **Variable Scroll Speed:** Each chart now has a specific note speed (e.g., Hard charts scroll faster than Easy ones).
-- **Smart Audio Offset:** Implemented a hybrid timing system that allows notes to spawn *before* the music starts (Pre-roll), ensuring perfect sync even for songs that start immediately.
-- **Pause Menu:** Press `ESC` to pause, resume, retry, or quit.
-- **Hit Sounds:** Added satisfying feedback sounds when hitting notes.
-- **Expanded Song List:** Added slots for new tracks and a carousel navigation system.
-
-### 🆕 New in v1.3.0
-- **Hold Notes:** Added support for long notes. Players must hold the key and release it at the right time.
-- **Difficulty System:** Songs now support multiple charts (e.g., Easy, Hard) with a selector in the menu.
-- **Anti-Spam Mechanic:** "Ghost tapping" (pressing keys when there are no notes) now resets the combo to encourage rhythmic precision.
-- **Editor Upgrade:** The in-game editor now automatically detects and records hold notes based on how long you press the key.
-
-### 🆕 New in v1.2.0
-- **Overhauled Results Screen:** Complete visual redesign with glassmorphism UI.
-- **Ranking System:** Calculates accuracy (SS, S, A, B, C) and displays dynamic character stickers based on performance.
-- **Fixed Scoring Logic:** "Max Combo" is now tracked correctly even if the combo breaks at the end. Accuracy is calculated based on note hits (weighted) rather than total score.
-
-### 🆕 New in v1.1.0
-- **Enhanced Visual Feedback:** New explosive animations for "PERFECT" hits and a shaking effect for "MISS". The Combo counter now pulses on every hit.
-- **Refined Gameplay Feel:** Adjusted hit windows (250ms) and "Perfect" timing (80ms) to make the game feel more responsive, fair, and fun.
-- **Smart Game Loop:** The game now correctly detects the end of the song (or the last note) to trigger the Results screen automatically.
+### 🆕 New in v2.0.0 (The "Overdrive" Update)
+- **Fever System (Kessoku Charge):** Fill the gauge and press `SPACE` to double your score with a flashy "Kita-Aura" cut-in animation.
+- **Modifiers System:**
+  - **Speed Up:** Increases note scroll speed by 30%.
+  - **Sudden Death:** Miss a single note and it's Game Over.
+  - **Auto Play:** Watch the CPU play the chart perfectly (Score not saved).
+- **Visual Overhaul:** Dynamic stage lighting (Lane Beams) and reactive Combo Aura that intensifies as you play.
+- **Custom Keybinds:** Remap your keys in the Options menu to fit your playstyle.
+- **Hold Note Mechanics:** Fully implemented hold/release logic with visual trails.
 
 ### 🚀 Core Features
 - **Custom Rhythm Engine:** Precise timing system based on `AudioContext` (not frame-dependent) for accurate gameplay.
@@ -106,6 +88,8 @@ architecture, performance, and visual polish.
 -  **D / F** → Left notes\
 
 -  **J / K** → Right notes
+
+-  **Fever:** Press **SPACE** when the bar is full.
 
   
 

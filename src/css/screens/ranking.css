@@ -1,0 +1,156 @@
+.ranking-screen {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.ranking-bg {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background-size: cover;
+    background-position: center;
+    filter: blur(10px) brightness(0.4);
+    transition: background-image 0.5s;
+    z-index: 0;
+}
+
+.ranking-overlay {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.6);
+    z-index: 1;
+}
+
+.ranking-panel {
+    position: relative;
+    z-index: 10;
+    width: 800px;
+    background: rgba(20, 20, 30, 0.9);
+    border: 1px solid var(--color-ryo);
+    border-radius: 15px;
+    padding: 40px;
+    box-shadow: 0 0 50px rgba(0,0,0,0.5);
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.ranking-panel h2 {
+    font-family: var(--font-display);
+    color: white;
+    text-align: center;
+    font-size: 2.5rem;
+    text-shadow: 0 0 10px var(--color-ryo);
+    margin-bottom: 20px;
+}
+
+/* Filtros */
+.filters {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(255,255,255,0.05);
+    padding: 15px;
+    border-radius: 8px;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.filter-group label {
+    font-family: var(--font-display);
+    color: #aaa;
+    font-size: 0.8rem;
+}
+
+#song-select {
+    background: #222;
+    color: white;
+    border: 1px solid #444;
+    padding: 8px;
+    font-family: var(--font-body);
+    font-size: 1rem;
+    border-radius: 4px;
+    min-width: 250px;
+}
+
+.diff-tabs {
+    display: flex;
+    gap: 10px;
+}
+
+.tab-btn {
+    background: transparent;
+    border: 1px solid #555;
+    color: #888;
+    padding: 5px 15px;
+    cursor: pointer;
+    font-family: var(--font-display);
+    transition: all 0.2s;
+}
+
+.tab-btn:hover { background: rgba(255,255,255,0.1); }
+.tab-btn.active { color: white; transform: scale(1.05); }
+
+/* Tabela */
+.table-container {
+    background: rgba(0,0,0,0.3);
+    border-radius: 8px;
+    min-height: 300px;
+}
+
+.table-header {
+    display: flex;
+    padding: 15px;
+    border-bottom: 2px solid rgba(255,255,255,0.1);
+    font-family: var(--font-display);
+    color: var(--color-nijika);
+}
+
+#global-score-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+#global-score-list li {
+    display: flex;
+    padding: 12px 15px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    font-family: var(--font-display);
+    color: white;
+    font-size: 1.1rem;
+}
+
+/* Colunas */
+.table-header span, #global-score-list li span { flex: 1; text-align: center; }
+.col-rank { max-width: 60px; font-weight: bold; }
+.col-name { text-align: left !important; padding-left: 20px; color: #ddd; }
+.col-score { color: var(--color-bocchi); font-weight: bold; }
+.col-date { font-size: 0.9rem; color: #888; }
+
+/* Cores do Top 3 */
+.gold .col-rank { color: #FFD700; text-shadow: 0 0 10px #FFD700; }
+.silver .col-rank { color: #C0C0C0; }
+.bronze .col-rank { color: #CD7F32; }
+
+.loading, .empty {
+    text-align: center;
+    padding: 40px;
+    color: #666;
+    font-family: var(--font-display);
+}
+
+#btn-back {
+    align-self: center;
+    width: 200px;
+    margin-top: 10px;
+}

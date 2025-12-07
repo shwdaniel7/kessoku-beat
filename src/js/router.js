@@ -5,6 +5,7 @@ import OptionsScreen from './screens/options.js';
 import TutorialScreen from './screens/tutorial.js';
 import ResultsScreen from './screens/results.js';
 import EditorScreen from './screens/editor.js';
+import RankingScreen from './screens/ranking.js';
 
 const routes = {
     'menu': MenuScreen,
@@ -13,7 +14,8 @@ const routes = {
     'options': OptionsScreen,
     'tutorial': TutorialScreen,
     'results': ResultsScreen,
-    'editor': EditorScreen
+    'editor': EditorScreen,
+    'ranking': RankingScreen
 };
 
 class Router {

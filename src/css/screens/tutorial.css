@@ -7,41 +7,36 @@
     justify-content: center;
 }
 
-/* Fundo Específico do Tutorial */
 .tutorial-bg {
     position: absolute;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    /* Se tiver uma imagem específica da Nijika, coloque aqui */
-    background-image: url('../../../assets/images/tutorial_bg.jpg'); 
+    top: 0; left: 0; width: 100%; height: 100%;
+    background-image: url('../../../assets/images/tutorial_bg.jpg');
     background-size: cover;
     background-position: center;
-    filter: blur(5px) sepia(0.5) hue-rotate(10deg); /* Filtro amarelado no fundo */
+    filter: blur(5px) sepia(0.5) hue-rotate(10deg);
     z-index: 0;
 }
 
 .screen-overlay {
     position: absolute;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
+    top: 0; left: 0; width: 100%; height: 100%;
     background: rgba(0,0,0,0.7);
     z-index: 1;
 }
 
-/* Painel Estilo Nijika (Amarelo) */
 .tutorial-panel {
     position: relative;
     z-index: 10;
-    width: 500px;
-    background: linear-gradient(180deg, rgba(30,30,35,0.95) 0%, rgba(15,15,10,0.98) 100%);
-    
-    /* Borda e Sombra Amarelas */
-    border: 1px solid var(--color-nijika);
-    box-shadow: 0 0 40px rgba(242, 214, 75, 0.15);
-    
+    width: 600px;
+    background: rgba(20, 20, 30, 0.9);
+    border: 2px solid var(--color-nijika); /* Amarelo Nijika */
+    box-shadow: 0 0 40px rgba(242, 214, 75, 0.2);
     padding: 40px;
-    transform: skewX(-2deg); /* Inclinação Cyberpunk */
+    transform: skewX(-2deg);
     text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
 }
 
 .tutorial-panel h2 {
@@ -49,34 +44,46 @@
     color: var(--color-nijika);
     border-bottom: 2px solid var(--color-nijika);
     padding-bottom: 15px;
-    margin-bottom: 30px;
+    margin-bottom: 10px;
     text-transform: uppercase;
-    letter-spacing: 2px;
+    letter-spacing: 4px;
     text-shadow: 0 0 10px rgba(242, 214, 75, 0.5);
 }
 
-/* Teclas */
+/* --- TECLAS --- */
 .key-guide {
     display: flex;
-    gap: 30px;
-    justify-content: center;
-    margin-bottom: 30px;
+    flex-direction: column;
+    gap: 20px;
+    align-items: center;
+    margin-bottom: 20px;
 }
 
-.key-box {
+.key-group {
     display: flex;
-    gap: 10px;
+    flex-direction: column;
+    gap: 5px;
+    align-items: center;
+}
+
+.key-label {
+    font-family: var(--font-display);
+    color: #aaa;
+    font-size: 0.8rem;
+    letter-spacing: 2px;
+}
+
+.key-row {
+    display: flex;
+    gap: 15px;
 }
 
 .key {
     width: 60px;
     height: 60px;
-    
-    /* Estilo das teclas em Amarelo */
     border: 2px solid var(--color-nijika);
     color: var(--color-nijika);
     box-shadow: 0 0 15px rgba(242, 214, 75, 0.2);
-    
     display: flex;
     align-items: center;
     justify-content: center;
@@ -86,31 +93,46 @@
     transform: skewX(2deg); /* Compensa a inclinação do painel */
 }
 
+/* Estilo especial para a Barra de Espaço */
+.key-space {
+    width: 300px; /* Bem larga */
+    height: 50px;
+    font-size: 1.5rem;
+    border-color: white;
+    color: white;
+    box-shadow: 0 0 15px rgba(255,255,255,0.3);
+}
+
+/* --- TEXTOS --- */
 .instructions p {
     font-family: var(--font-body);
-    font-size: 1.1rem;
-    margin-bottom: 10px;
+    font-size: 1rem;
+    margin-bottom: 8px;
     color: #ccc;
-    transform: skewX(2deg); /* Compensa a inclinação */
+    transform: skewX(2deg);
 }
 
 .highlight {
     color: var(--color-nijika);
     font-weight: bold;
     text-transform: uppercase;
+    margin-top: 15px;
+    display: block;
+    border: 1px solid rgba(242, 214, 75, 0.3);
+    padding: 5px;
+    background: rgba(242, 214, 75, 0.1);
 }
 
-/* Botão Voltar customizado para Nijika */
 #btn-back {
-    margin-top: 30px;
+    margin-top: 10px;
     width: 100%;
     border-color: var(--color-nijika);
-    color: var(--text-white);
-    transform: skewX(0deg); /* Reset do skew do botão base se necessário */
+    color: white;
+    transform: skewX(0deg);
 }
 
 #btn-back:hover {
-    background: rgba(242, 214, 75, 0.2);
+    background: var(--color-nijika);
     box-shadow: 0 0 20px var(--color-nijika);
-    color: #fff;
+    color: #000;
 }

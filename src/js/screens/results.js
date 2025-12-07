@@ -1,6 +1,6 @@
 import Router from '../router.js';
 import AudioEngine from '../audioEngine.js';
-import Firebase from '../firebase.js'; // <--- Importe o módulo novo
+import Firebase from '../firebase.js';
 
 export default class ResultsScreen {
     constructor(params) {
@@ -8,10 +8,13 @@ export default class ResultsScreen {
         this.maxCombo = params.maxCombo || 0;
         this.percentage = params.accuracy || 0;
         this.rank = params.rank || 'C';
-        this.chartId = params.chartId || 'song1_hard'; // ID para o banco de dados
+        this.chartId = params.chartId || 'song1_hard';
+        
+        // --- RECEBE A FLAG DE AUTO PLAY ---
+        this.isAuto = params.isAuto || false;
         
         this.sticker = this.getSticker(this.rank);
-        this.submitted = false; // Para não enviar duas vezes
+        this.submitted = false;
     }
 
     getSticker(rank) {
@@ -25,13 +28,36 @@ export default class ResultsScreen {
     }
 
     render() {
+        // --- LÓGICA DE EXIBIÇÃO DO INPUT ---
+        let inputHTML = '';
+        
+        if (this.isAuto) {
+            // Se for Auto Play, mostra aviso
+            inputHTML = `
+                <div style="text-align: center; color: var(--color-nijika); font-family: var(--font-display); padding: 20px;">
+                    <h3 style="font-size: 1.5rem; margin-bottom: 5px;">AUTO PLAY MODE</h3>
+                    <p style="font-size: 0.8rem; color: #aaa;">SCORE NOT SAVED</p>
+                </div>
+            `;
+        } else {
+            // Se for jogo normal, mostra input
+            inputHTML = `
+                <div id="input-area">
+                    <p class="enter-name">ENTER NAME</p>
+                    <div class="input-group">
+                        <input type="text" id="player-name" maxlength="3" placeholder="AAA" autocomplete="off">
+                        <button id="btn-submit" class="btn-small">SUBMIT</button>
+                    </div>
+                </div>
+            `;
+        }
+
         return `
             <div class="screen-container results-screen">
                 <div class="results-bg"></div>
                 <div class="results-overlay"></div>
 
                 <div class="results-content">
-                    <!-- Lado Esquerdo: Rank -->
                     <div class="rank-section">
                         <div class="rank-letter ${this.rank.toLowerCase()}">${this.rank}</div>
                         <div class="rank-sticker">
@@ -39,10 +65,7 @@ export default class ResultsScreen {
                         </div>
                     </div>
 
-                    <!-- Lado Direito: Stats e Leaderboard -->
                     <div class="right-panel">
-                        
-                        <!-- Stats Normais -->
                         <div class="stats-panel">
                             <h2>RESULT</h2>
                             <div class="stat-row"><span class="label">SCORE</span><span class="value score">${this.score}</span></div>
@@ -50,15 +73,8 @@ export default class ResultsScreen {
                             <div class="stat-row"><span class="label">ACCURACY</span><span class="value accuracy">${this.percentage}%</span></div>
                         </div>
 
-                        <!-- Área do Leaderboard (Arcade Style) -->
                         <div class="leaderboard-panel">
-                            <div id="input-area">
-                                <p class="enter-name">ENTER NAME</p>
-                                <div class="input-group">
-                                    <input type="text" id="player-name" maxlength="3" placeholder="AAA" autocomplete="off">
-                                    <button id="btn-submit" class="btn-small">SUBMIT</button>
-                                </div>
-                            </div>
+                            ${inputHTML}
                             
                             <div id="loading-area" style="display:none;">LOADING RANKS...</div>
                             
@@ -81,35 +97,40 @@ export default class ResultsScreen {
     init() {
         if (this.rank === 'S' || this.rank === 'SS') AudioEngine.playSFX('confirm.mp3');
 
-        // Foca no input automaticamente
-        const input = document.getElementById('player-name');
-        input.focus();
+        // Só configura o input se NÃO for Auto Play
+        if (!this.isAuto) {
+            const input = document.getElementById('player-name');
+            if (input) {
+                input.focus();
+                document.getElementById('btn-submit').addEventListener('click', () => this.submitScore());
+                input.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') this.submitScore();
+                });
+            }
+        }
 
-        // Botão Enviar
-        document.getElementById('btn-submit').addEventListener('click', () => this.submitScore());
-        
-        // Enviar com Enter
-        input.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') this.submitScore();
+        const btnRetry = document.getElementById('btn-retry');
+        const btnMenu = document.getElementById('btn-menu');
+
+        [btnRetry, btnMenu].forEach(btn => {
+            btn.addEventListener('mouseenter', () => AudioEngine.playSFX('hover.mp3'));
         });
 
-        // Botões de Navegação
-        document.getElementById('btn-retry').addEventListener('click', () => {
+        btnRetry.addEventListener('click', () => {
             AudioEngine.playSFX('confirm.mp3');
             Router.navigate('select');
         });
 
-        document.getElementById('btn-menu').addEventListener('click', () => {
+        btnMenu.addEventListener('click', () => {
             AudioEngine.playSFX('confirm.mp3');
             Router.navigate('menu');
         });
         
-        // Carrega o leaderboard atual (sem o seu score novo ainda)
         this.loadLeaderboard();
     }
 
     async submitScore() {
-        if (this.submitted) return;
+        if (this.submitted || this.isAuto) return;
         
         const nameInput = document.getElementById('player-name');
         const name = nameInput.value.trim();
@@ -119,14 +140,10 @@ export default class ResultsScreen {
         this.submitted = true;
         AudioEngine.playSFX('confirm.mp3');
 
-        // UI Loading
         document.getElementById('input-area').style.display = 'none';
         document.getElementById('loading-area').style.display = 'block';
 
-        // Salva no Firebase
         await Firebase.saveScore(name, this.score, this.chartId);
-
-        // Recarrega a lista
         await this.loadLeaderboard();
     }
 
@@ -137,20 +154,27 @@ export default class ResultsScreen {
         document.getElementById('loading-area').style.display = 'none';
         document.getElementById('table-area').style.display = 'block';
         
-        // Se ainda não enviou, mostra o input, senão esconde
-        if (!this.submitted) {
-            document.getElementById('input-area').style.display = 'block';
-        } else {
-            document.getElementById('input-area').style.display = 'none';
+        // Se não for Auto e não enviou, mostra input
+        if (!this.submitted && !this.isAuto) {
+            const inputArea = document.getElementById('input-area');
+            if(inputArea) inputArea.style.display = 'block';
         }
 
-        list.innerHTML = scores.map((s, i) => `
-            <li class="${s.score === this.score && s.name === document.getElementById('player-name').value.toUpperCase() ? 'highlight' : ''}">
-                <span class="rank-num">#${i + 1}</span>
-                <span class="rank-name">${s.name}</span>
-                <span class="rank-score">${s.score}</span>
-            </li>
-        `).join('');
+        list.innerHTML = scores.map((s, i) => {
+            // Verifica se é o score atual do jogador (apenas se não for auto)
+            const isMyScore = !this.isAuto && 
+                              s.score === this.score && 
+                              document.getElementById('player-name') &&
+                              s.name === document.getElementById('player-name').value.toUpperCase();
+
+            return `
+                <li class="${isMyScore ? 'highlight' : ''}">
+                    <span class="rank-num">#${i + 1}</span>
+                    <span class="rank-name">${s.name}</span>
+                    <span class="rank-score">${s.score}</span>
+                </li>
+            `;
+        }).join('');
         
         if (scores.length === 0) {
             list.innerHTML = '<li style="text-align:center; color:#666;">NO SCORES YET</li>';
