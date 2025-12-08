@@ -1051,3 +1051,44 @@ body.low-spec .kita-cutin { display: none; }
     from { filter: brightness(1); }
     to { filter: brightness(1.2) contrast(1.1); }
 }
+
+/* =========================================
+   LOW HP WARNING (PERIGO)
+   ========================================= */
+
+/* Quando o HP está crítico (< 20%) */
+.critical-hp-effect::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 90; /* Fica acima do fundo, mas abaixo da UI */
+    
+    /* Vinheta Vermelha Pulsante nas bordas */
+    box-shadow: inset 0 0 100px rgba(255, 0, 0, 0.6);
+    animation: dangerPulse 1s infinite alternate;
+}
+
+/* A pista fica levemente avermelhada, mas ESTÁTICA (sem tremer) */
+.critical-hp-effect .track-container {
+    border-color: red !important;
+    box-shadow: 0 0 30px red !important;
+    transition: all 0.3s;
+}
+
+/* A barra de vida fica piscando freneticamente */
+.critical-hp-effect .hp-bar-fill {
+    background: red !important;
+    box-shadow: 0 0 30px red !important;
+    animation: hpPanic 0.2s infinite alternate;
+}
+
+@keyframes dangerPulse {
+    from { box-shadow: inset 0 0 50px rgba(255, 0, 0, 0.3); }
+    to { box-shadow: inset 0 0 150px rgba(255, 0, 0, 0.8); }
+}
+
+@keyframes hpPanic {
+    from { opacity: 0.5; }
+    to { opacity: 1; }
+}

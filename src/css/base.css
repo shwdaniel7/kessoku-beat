@@ -43,3 +43,34 @@ body {
     z-index: 1;
     opacity: 0.3;
 }
+
+/* Melhoria de Tipografia e UI */
+button {
+    /* Remove o outline azul padrão do navegador ao clicar */
+    outline: none !important;
+    /* Impede seleção de texto */
+    user-select: none;
+}
+
+/* Scrollbar Global Bonita */
+::-webkit-scrollbar {
+    width: 8px;
+}
+::-webkit-scrollbar-track {
+    background: #111;
+}
+::-webkit-scrollbar-thumb {
+    background: var(--color-bocchi);
+    border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #ff99cc;
+}
+
+/* Efeito de vidro mais consistente */
+.glass-panel {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+}

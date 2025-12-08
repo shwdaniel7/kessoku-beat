@@ -15,7 +15,7 @@ architecture, performance, and visual polish.
 
   
 
-![Project Status](https://img.shields.io/badge/Status-Version_4.0.0-pink)
+![Project Status](https://img.shields.io/badge/Status-Version_4.1.0-pink)
 
 ![Tech](https://img.shields.io/badge/Tech-HTML5_|_CSS3_|_ES6+-blue)
 
@@ -29,6 +29,13 @@ architecture, performance, and visual polish.
   
 
 ## ✨ Features
+
+## ✨ Features
+
+### 🆕 New in v4.1.0 (Visual Arts Update)
+- **Visual Juice:** Added particle explosions on hits and a reactive parallax effect on the main menu.
+- **Polished UI:** New screen transitions, custom scrollbars, and a cleaner "Low HP" warning system.
+- **Refined Gameplay:** Removed excessive screen shake for a smoother experience.
 
 ### 🆕 New in v4.0.0 (Economy Update)
 - **Kessoku Shop:** Earn Yen by playing and spend it on cosmetic upgrades.

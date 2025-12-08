@@ -5,14 +5,11 @@ export default class NoteSpawner {
         this.chartId = chartId;
         this.game = gameInstance;
         this.mods = mods || { auto: false, sudden: false, speedUp: false };
-        
-        // --- SKIN ---
         this.skin = skin || 'note_default';
 
         this.chartNotes = [];
         this.activeNotes = [];
         
-        // Speed Up Mod
         let baseSpeed = speed || 1.3;
         if (this.mods.speedUp) baseSpeed = baseSpeed * 0.7;
         this.noteSpeed = baseSpeed;
@@ -24,6 +21,16 @@ export default class NoteSpawner {
         this.poolSize = 50;
         
         this.isPlaying = false;
+        
+        // Variáveis de Tempo
+        this.startTime = 0;
+        this.audioDelay = 0;
+        this.audioStarted = false;
+        
+        // --- CORREÇÃO DO PAUSE ---
+        this.pauseStartTime = 0;
+        this.totalPausedTime = 0;
+        // -------------------------
 
         const trackEl = document.querySelector('.track-container');
         this.trackHeight = trackEl ? trackEl.offsetHeight : window.innerHeight; 
@@ -87,6 +94,7 @@ export default class NoteSpawner {
             }
 
             this.startTime = performance.now();
+            this.totalPausedTime = 0; // Reseta tempo pausado
             this.audioStarted = false;
             this.isPlaying = true;
             this.loop();
@@ -97,12 +105,34 @@ export default class NoteSpawner {
         }
     }
 
+    // --- NOVOS MÉTODOS DE PAUSE ---
+    pause() {
+        this.isPlaying = false;
+        // Marca que horas pausou
+        this.pauseStartTime = performance.now();
+    }
+
+    resume() {
+        if (this.isPlaying) return;
+        
+        // Calcula quanto tempo ficou parado e adiciona ao total
+        const now = performance.now();
+        this.totalPausedTime += (now - this.pauseStartTime);
+        
+        this.isPlaying = true;
+        this.loop();
+    }
+    // ------------------------------
+
     loop() {
         if (!this.isPlaying) return;
 
         let currentTime;
+        
         if (!this.audioStarted) {
-            const rawTime = (performance.now() - this.startTime) / 1000;
+            // Usa o relógio do sistema MENOS o tempo que ficou pausado
+            const rawTime = (performance.now() - this.startTime - this.totalPausedTime) / 1000;
+            
             if (rawTime >= this.audioDelay) {
                 AudioEngine.playBGM(this.audioPath, false);
                 this.audioStarted = true;
@@ -111,6 +141,7 @@ export default class NoteSpawner {
                 currentTime = rawTime;
             }
         } else {
+            // Se a música já começou, o AudioContext é o mestre (ele pausa sozinho)
             currentTime = this.audioDelay + AudioEngine.bgmAudio.currentTime;
         }
 
@@ -160,12 +191,12 @@ export default class NoteSpawner {
                 const progress = 1 - (timeUntilHit / this.noteSpeed);
                 const y = progress * this.hitLineY;
 
-                // Verifica se é a skin de círculo para manter a centralização
-            if (this.skin === 'note_circle') {
-                noteObj.el.style.transform = `translate3d(-50%, ${y}px, 0)`;
-            } else {
-                noteObj.el.style.transform = `translate3d(0, ${y}px, 0)`;
-            }
+                // Correção para skins centralizadas (Osu)
+                if (this.skin === 'note_circle') {
+                    noteObj.el.style.transform = `translate3d(-50%, ${y}px, 0)`;
+                } else {
+                    noteObj.el.style.transform = `translate3d(0, ${y}px, 0)`;
+                }
 
                 if (timeUntilHit < -this.hitWindow && !noteObj.data.hit) {
                     this.handleMiss(i);
@@ -182,11 +213,9 @@ export default class NoteSpawner {
 
         const el = this.getNoteFromPool();
         
-        // --- APLICA A SKIN ---
-        if (this.skin !== 'note_default') {
-            el.classList.add(`skin-${this.skin}`);
-        }
-        // --------------------
+        // Limpa classes antigas
+        el.className = 'note';
+        if (this.skin !== 'note_default') el.classList.add(`skin-${this.skin}`);
 
         if (noteData.lane === 1 || noteData.lane === 2) el.classList.add('note-center');
         
@@ -209,7 +238,7 @@ export default class NoteSpawner {
         if (this.audioStarted) {
             currentTime = this.audioDelay + AudioEngine.bgmAudio.currentTime;
         } else {
-            currentTime = (performance.now() - this.startTime) / 1000;
+            currentTime = (performance.now() - this.startTime - this.totalPausedTime) / 1000;
         }
 
         const noteIndex = this.activeNotes.findIndex(n => 
@@ -242,7 +271,7 @@ export default class NoteSpawner {
         if (this.audioStarted) {
             currentTime = this.audioDelay + AudioEngine.bgmAudio.currentTime;
         } else {
-            currentTime = (performance.now() - this.startTime) / 1000;
+            currentTime = (performance.now() - this.startTime - this.totalPausedTime) / 1000;
         }
 
         const noteIndex = this.activeNotes.findIndex(n => 

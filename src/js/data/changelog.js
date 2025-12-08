@@ -2,6 +2,19 @@ export const appVersion = "v4.0.0";
 
 export const changelogData = [
     {
+        version: "v4.1.0",
+        title: "THE VISUAL ARTS UPDATE",
+        date: "2025-12-08",
+        changes: [
+            "🌌 NEW: Menu Parallax Effect (Mouse interaction).",
+            "✨ NEW: Particle System! Sparks fly when hitting notes.",
+            "⚠️ UPDATE: Redesigned Low HP Warning (Red Vignette) for better visibility.",
+            "🎬 NEW: Global Screen Transitions (Fade to Black).",
+            "🔧 FIX: Removed screen shake on 'Perfect' hits to reduce motion sickness.",
+            "💅 POLISH: Custom scrollbars and UI refinements."
+        ]
+    },
+    {
         version: "v4.0.0",
         title: "THE ECONOMY UPDATE",
         date: "2025-12-08",

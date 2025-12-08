@@ -8,26 +8,33 @@ import Firebase from '../firebase.js';
 
 export default class GameScreen {
     constructor(params) {
+        // Identificadores
         this.songId = params.songId || 'song1';
         this.chartId = params.chartId || 'song1_hard';
         this.noteSpeed = params.noteSpeed || 1.3;
         this.mods = params.mods || { auto: false, sudden: false, speedUp: false };
         
+        // Dados da Música
         this.songData = songList.find(s => s.id === this.songId) || { title: 'Unknown', artist: 'Unknown', cover: '' };
 
+        // Estado do Jogo
         this.score = 0;
         this.combo = 0;
         this.maxCombo = 0;
         this.hits = { perfect: 0, good: 0, miss: 0 };
         
+        // HP System
         this.hp = 100;
         this.maxHp = 100;
         
+        // Personagem
         const charId = Storage.get('selectedCharId') || 'bocchi';
         this.character = characters.find(c => c.id === charId) || characters[0];
         
+        // Buffs
         this.nijikaSafetyCount = 3; 
         
+        // Fever
         this.fever = 0;
         this.maxFever = 100;
         this.isFeverActive = false;
@@ -41,6 +48,7 @@ export default class GameScreen {
         
         this.keybinds = Storage.get('keybinds') || ['KeyD', 'KeyF', 'KeyJ', 'KeyK'];
 
+        // Multiplicador
         this.scoreMultiplier = 1.0;
         if (!this.mods.auto) {
             if (this.mods.speedUp) this.scoreMultiplier += 0.1;
@@ -58,6 +66,7 @@ export default class GameScreen {
         return `
             <div class="screen-container game-screen" id="game-screen-el">
                 
+                <!-- INTRO (Apenas Imagem) -->
                 <div class="cinematic-intro" id="cinematic-intro">
                     <div class="intro-content">
                         <div class="intro-cover">
@@ -72,6 +81,7 @@ export default class GameScreen {
                     <div class="intro-ready" id="intro-ready">READY</div>
                 </div>
 
+                <!-- UI -->
                 <div class="game-ui fade-in-target">
                     <div class="score-box">
                         <span class="label">SCORE</span>
@@ -83,6 +93,7 @@ export default class GameScreen {
                     </div>
                 </div>
                 
+                <!-- HP BAR -->
                 <div class="hp-container fade-in-target">
                     <div class="hp-label">LIFE</div>
                     <div class="hp-bar-bg">
@@ -90,6 +101,7 @@ export default class GameScreen {
                     </div>
                 </div>
 
+                <!-- FEVER -->
                 <div class="kita-cutin" id="kita-cutin">
                     <img src="./assets/images/kita_fever.gif" alt="Kita Aura">
                 </div>
@@ -105,9 +117,10 @@ export default class GameScreen {
 
                 <div id="feedback-container"></div>
                 
-                <!-- Container de Partículas (Novo) -->
+                <!-- PARTÍCULAS -->
                 <div id="particles-container" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 60;"></div>
 
+                <!-- PISTA -->
                 <div class="track-container fade-in-target">
                     <div class="lane" id="lane-0"><div class="lane-beam"></div><div class="key-hint"></div><div class="hit-zone"></div></div>
                     <div class="lane" id="lane-1"><div class="lane-beam"></div><div class="key-hint"></div><div class="hit-zone"></div></div>
@@ -115,6 +128,7 @@ export default class GameScreen {
                     <div class="lane" id="lane-3"><div class="lane-beam"></div><div class="key-hint"></div><div class="hit-zone"></div></div>
                 </div>
 
+                <!-- OVERLAYS -->
                 <div class="game-overlay" id="pause-overlay" style="display: none;">
                     <div class="pause-menu">
                         <h2>PAUSED</h2>
@@ -139,6 +153,7 @@ export default class GameScreen {
     async init() {
         this.applyTheme();
 
+        // --- CARREGA SKINS DO USUÁRIO ---
         let userNoteSkin = 'note_default';
         let userLaneSkin = 'lane_default';
         
@@ -156,15 +171,19 @@ export default class GameScreen {
             }
         }
 
+        // --- APLICA SKIN DA PISTA ---
         const track = document.querySelector('.track-container');
         if (track) {
             track.className = 'track-container fade-in-target'; 
             track.classList.add(`skin-${userLaneSkin}`);
         }
 
+        // --- INICIALIZA SPAWNER ---
         this.spawner = new NoteSpawner(this.chartId, this, this.noteSpeed, this.mods, userNoteSkin);
+        
         this.updateKeyHints();
 
+        // Bindings
         this.handleKeyDownBound = (e) => {
             if (e.key === 'Escape') this.togglePause();
             else if (e.code === 'Space') this.activateFever();
@@ -175,14 +194,18 @@ export default class GameScreen {
         document.addEventListener('keydown', this.handleKeyDownBound);
         document.addEventListener('keyup', this.handleKeyUpBound);
 
+        // Botões
         document.getElementById('btn-resume').addEventListener('click', () => this.togglePause());
         document.getElementById('btn-retry').addEventListener('click', () => this.restart());
         document.getElementById('btn-fail-retry').addEventListener('click', () => this.restart());
         document.getElementById('btn-quit').addEventListener('click', () => this.quit());
         document.getElementById('btn-fail-quit').addEventListener('click', () => this.quit());
 
+        // Visual Loop (Bass Pulse)
         this.visualLoopActive = true;
         this.updateVisuals();
+
+        // Start
         this.playCinematicIntro();
     }
 
@@ -196,7 +219,10 @@ export default class GameScreen {
         if (!document.body.classList.contains('low-spec')) {
             const bass = AudioEngine.getBassEnergy();
             const bg = document.querySelector('.game-screen');
-            if (bg) bg.style.backgroundSize = `${100 + (bass * 5)}%`; 
+            if (bg) {
+                // Zoom sutil no fundo com a batida
+                bg.style.backgroundSize = `${100 + (bass * 5)}%`; 
+            }
         }
         requestAnimationFrame(() => this.updateVisuals());
     }
@@ -233,34 +259,43 @@ export default class GameScreen {
     updateHP(amount) {
         if (this.mods.auto) return;
         this.hp = Math.min(this.maxHp, this.hp + amount);
+        
         const hpFill = document.getElementById('hp-fill');
+        const screen = document.getElementById('game-screen-el');
+
         if (hpFill) {
             hpFill.style.height = `${this.hp}%`;
-            if (this.hp < 30) hpFill.classList.add('danger');
-            else hpFill.classList.remove('danger');
+            
+            // --- BOCCHI GLITCH (CRITICAL HP) ---
+            if (this.hp < 20) {
+                hpFill.classList.add('danger');
+                screen.classList.add('critical-hp-effect'); // Ativa o glitch
+            } else {
+                hpFill.classList.remove('danger');
+                screen.classList.remove('critical-hp-effect');
+            }
         }
-        if (this.hp <= 0) this.failGame("HP DEPLETED");
+
+        if (this.hp <= 0) {
+            this.failGame("HP DEPLETED");
+        }
     }
 
     activateFever() {
         if (this.isPaused || !this.isPlaying) return;
         if (this.fever >= this.maxFever && !this.isFeverActive) {
             this.isFeverActive = true;
-            
             const screen = document.getElementById('game-screen-el');
             const container = document.getElementById('fever-container');
             const kitaCutin = document.getElementById('kita-cutin');
-
-            // --- VISUAL UPGRADE: FEVER MODE ---
-            screen.classList.add('fever-active', 'fever-mode-visual'); // Adiciona efeito visual
+            
+            screen.classList.add('fever-active', 'fever-mode-visual');
             container.classList.remove('fever-ready');
             
             if (kitaCutin) kitaCutin.classList.add('active');
             
             AudioEngine.playSFX('kita_aura.mp3'); 
             this.showFeedback('FEVER!');
-            
-            // Screen Shake ao ativar
             this.triggerShake();
 
             const fill = document.getElementById('fever-fill');
@@ -271,7 +306,7 @@ export default class GameScreen {
                 this.isFeverActive = false;
                 this.fever = 0;
                 
-                screen.classList.remove('fever-active', 'fever-mode-visual'); // Remove efeito
+                screen.classList.remove('fever-active', 'fever-mode-visual');
                 if (kitaCutin) kitaCutin.classList.remove('active');
                 
                 fill.style.transition = 'height 0.2s ease-out';
@@ -289,7 +324,7 @@ export default class GameScreen {
         else container.classList.remove('fever-ready');
     }
 
-updateScore(points, type) {
+    updateScore(points, type) {
         if (type === 'PERFECT') this.hits.perfect++;
         if (type === 'GOOD') this.hits.good++;
         if (type === 'MISS') this.hits.miss++;
@@ -335,62 +370,44 @@ updateScore(points, type) {
                     screen.classList.add('aura-1');
                 }
             }
-
-            // REMOVI O SHAKE DAQUI!
+            
+            // Shake apenas no Perfect (removido conforme pedido, mas mantido no Fever)
         }
         document.getElementById('score-val').innerText = this.score;
         document.getElementById('combo-val').innerText = this.combo;
     }
 
-    // --- NOVO: SPAWN DE PARTÍCULAS ---
     spawnParticles(laneIndex) {
         if (document.body.classList.contains('low-spec')) return;
-
         const lanes = document.querySelectorAll('.lane');
         if (!lanes[laneIndex]) return;
-
         const hitZone = lanes[laneIndex].querySelector('.hit-zone');
         const rect = hitZone.getBoundingClientRect();
         const container = document.getElementById('particles-container');
-
-        // Cria 6 partículas
         for (let i = 0; i < 6; i++) {
             const p = document.createElement('div');
             p.classList.add('particle');
-            
-            // Posição inicial (centro da hitzone)
             const x = rect.left + rect.width / 2;
             const y = rect.top + rect.height / 2;
-            
             p.style.left = `${x}px`;
             p.style.top = `${y}px`;
-            
-            // Direção aleatória
             const angle = Math.random() * Math.PI * 2;
             const velocity = 50 + Math.random() * 100;
             const tx = Math.cos(angle) * velocity;
-            const ty = Math.sin(angle) * velocity - 50; // Tende a subir
-
-            // Aplica animação via Web Animations API (mais performático que CSS puro pra random)
+            const ty = Math.sin(angle) * velocity - 50;
             p.animate([
                 { transform: 'translate(0, 0) scale(1)', opacity: 1 },
                 { transform: `translate(${tx}px, ${ty}px) scale(0)`, opacity: 0 }
-            ], {
-                duration: 500,
-                easing: 'cubic-bezier(0, .9, .57, 1)'
-            }).onfinish = () => p.remove();
-
+            ], { duration: 500, easing: 'cubic-bezier(0, .9, .57, 1)' }).onfinish = () => p.remove();
             container.appendChild(p);
         }
     }
 
-    // --- NOVO: SCREEN SHAKE ---
     triggerShake() {
         if (document.body.classList.contains('low-spec')) return;
-        
         const screen = document.getElementById('game-screen-el');
         screen.classList.remove('shake-effect');
-        void screen.offsetWidth; // Force reflow
+        void screen.offsetWidth;
         screen.classList.add('shake-effect');
     }
 
@@ -435,8 +452,6 @@ updateScore(points, type) {
             if (type === 'hit') {
                 hitZone.classList.add('hit-active');
                 if (beam) beam.classList.add('beam-active');
-                
-                // --- CHAMA PARTÍCULAS ---
                 this.spawnParticles(index);
             } else {
                 hitZone.classList.add('spam-active');
@@ -537,20 +552,27 @@ updateScore(points, type) {
         Router.navigate('select');
     }
 
-    togglePause() {
+togglePause() {
         if (document.getElementById('cinematic-intro').style.opacity !== '0') return;
         if (document.getElementById('fail-overlay').style.display !== 'none') return;
+
         this.isPaused = !this.isPaused;
         const overlay = document.getElementById('pause-overlay');
+
         if (this.isPaused) {
             overlay.style.display = 'flex';
             AudioEngine.pauseBGM();
-            this.spawner.isPlaying = false;
+            
+            // --- CORREÇÃO ---
+            if (this.spawner) this.spawner.pause(); 
+            // ----------------
         } else {
             overlay.style.display = 'none';
             AudioEngine.resumeBGM();
-            this.spawner.isPlaying = true;
-            this.spawner.loop();
+            
+            // --- CORREÇÃO ---
+            if (this.spawner) this.spawner.resume();
+            // ----------------
         }
     }
 

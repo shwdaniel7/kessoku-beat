@@ -26,9 +26,31 @@ class Router {
     constructor() {
         this.app = document.getElementById('app');
         this.currentScreen = null;
+        
+        // Cria o elemento de transição se não existir
+        if (!document.getElementById('transition-overlay')) {
+            const overlay = document.createElement('div');
+            overlay.id = 'transition-overlay';
+            overlay.style.cssText = `
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                background: #000; z-index: 9999; pointer-events: none;
+                opacity: 0; transition: opacity 0.3s ease-in-out;
+            `;
+            // Adiciona logo ou spinner aqui se quiser
+            document.body.appendChild(overlay);
+        }
     }
 
-    navigate(route, params = {}) {
+    async navigate(route, params = {}) {
+        const overlay = document.getElementById('transition-overlay');
+        
+        // 1. Fade Out (Tela fica preta)
+        overlay.style.opacity = '1';
+        
+        // Espera a animação (300ms)
+        await new Promise(r => setTimeout(r, 300));
+
+        // 2. Troca a tela (enquanto está preto)
         if (this.currentScreen && this.currentScreen.destroy) {
             this.currentScreen.destroy();
         }
@@ -36,16 +58,23 @@ class Router {
         const ScreenClass = routes[route];
         if (!ScreenClass) {
             console.error(`Route ${route} not found`);
+            overlay.style.opacity = '0';
             return;
         }
 
-        this.app.innerHTML = ''; // Limpa tela anterior
+        this.app.innerHTML = ''; 
         this.currentScreen = new ScreenClass(params);
         this.app.innerHTML = this.currentScreen.render();
         
-        // Aguarda renderização do DOM para anexar eventos
+        // Inicializa a nova tela
         setTimeout(() => {
             this.currentScreen.init();
+            
+            // 3. Fade In (Tela aparece)
+            // Pequeno delay para garantir que o DOM carregou imagens pesadas
+            setTimeout(() => {
+                overlay.style.opacity = '0';
+            }, 100);
         }, 0);
     }
 }

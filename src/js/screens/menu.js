@@ -85,6 +85,27 @@ export default class MenuScreen {
     init() {
         AudioEngine.playBGM('./assets/audio/menu.mp3');
 
+                // --- PARALLAX EFFECT ---
+        // Só ativa se não for Low Spec (para economizar bateria/cpu)
+        if (!document.body.classList.contains('low-spec')) {
+            document.addEventListener('mousemove', (e) => {
+                const x = (window.innerWidth - e.pageX * 2) / 100;
+                const y = (window.innerHeight - e.pageY * 2) / 100;
+
+                // Fundo move mais (está longe)
+                const bg = document.querySelector('.menu-bg');
+                if (bg) bg.style.transform = `scale(1.1) translate(${x}px, ${y}px)`;
+
+                // Personagem move menos (está perto/foco)
+                const char = document.querySelector('.character-container img');
+                if (char) char.style.transform = `translate(${-x * 0.5}px, ${-y * 0.5}px)`;
+                
+                // Logo move um pouco para dar profundidade 3D
+                const logo = document.querySelector('.logo-container');
+                if (logo) logo.style.transform = `translate(${-x * 1.5}px, ${-y * 1.5}px)`;
+            });
+        }
+        
         // --- LÓGICA DO CHANGELOG (NOVO) ---
         const logOverlay = document.getElementById('changelog-overlay');
         const btnLog = document.getElementById('btn-changelog');
