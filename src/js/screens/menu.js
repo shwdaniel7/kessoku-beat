@@ -1,27 +1,51 @@
 import Router from '../router.js';
 import AudioEngine from '../audioEngine.js';
+import Firebase from '../firebase.js'; 
+import { changelogData, appVersion } from '../data/changelog.js'; // <--- NOVO: Importa os dados
 
 export default class MenuScreen {
     constructor() {
-        // --- CORREÇÃO CRÍTICA: BINDING ---
-        // Cria uma referência fixa da função para poder remover o ouvinte depois
         this.handleInputBound = this.handleInput.bind(this);
+        this.currentUser = null;
     }
 
     render() {
+        // --- GERA O HTML DO CHANGELOG ---
+        const changelogHTML = changelogData.map(log => `
+            <div class="changelog-item">
+                <div class="log-header">
+                    <span class="log-version">${log.version}</span>
+                    <span class="log-date">${log.date}</span>
+                </div>
+                <h4 class="log-title">${log.title}</h4>
+                <ul class="log-list">
+                    ${log.changes.map(c => `<li>${c}</li>`).join('')}
+                </ul>
+            </div>
+        `).join('');
+
         return `
             <div class="screen-container menu-screen">
                 
-                <!-- CAMADA 1: Fundo -->
+                <!-- PERFIL DO USUÁRIO -->
+                <div id="user-profile" class="user-profile">
+                    <button id="btn-login" class="btn-login">LOGIN WITH GOOGLE</button>
+                    <div id="user-info" class="user-info hidden">
+                        <img id="user-avatar" src="" alt="Avatar">
+                        <div class="user-details">
+                            <span id="user-name">Guest</span>
+                            <span id="user-money">¥ 0</span>
+                        </div>
+                        <button id="btn-logout" class="btn-logout">LOGOUT</button>
+                    </div>
+                </div>
+
                 <div class="menu-bg"></div>
                 <div class="menu-overlay"></div>
-
-                <!-- CAMADA 2: Personagem (Bocchi na direita) -->
                 <div class="character-container">
                     <img src="./assets/images/bocchi_char.png" alt="Bocchi" class="bocchi-art">
                 </div>
 
-                <!-- CAMADA 3: Interface (Menu na esquerda) -->
                 <div class="ui-layer">
                     <div class="logo-container">
                         <h1 class="game-title">KESSOKU <span class="neon-pink">BEAT</span></h1>
@@ -30,9 +54,28 @@ export default class MenuScreen {
                     
                     <div class="menu-options">
                         <button id="btn-play" class="btn-primary">PLAY LIVE</button>
+                        <button id="btn-shop" class="btn-primary">SHOP</button>
                         <button id="btn-tutorial" class="btn-primary">TUTORIAL</button>
                         <button id="btn-ranking" class="btn-primary">RANKING</button>
                         <button id="btn-options" class="btn-primary">OPTIONS</button>
+                    </div>
+                </div>
+
+                <!-- BOTÃO DE VERSÃO (NOVO) -->
+                <div class="version-tag" id="btn-changelog">
+                    ${appVersion}
+                </div>
+
+                <!-- MODAL DE CHANGELOG (NOVO) -->
+                <div id="changelog-overlay" class="modal-overlay hidden">
+                    <div class="modal-panel">
+                        <div class="modal-header">
+                            <h3>PATCH NOTES</h3>
+                            <button id="btn-close-log">×</button>
+                        </div>
+                        <div class="modal-content">
+                            ${changelogHTML}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -40,59 +83,88 @@ export default class MenuScreen {
     }
 
     init() {
-        // 1. Iniciar Música do Menu
         AudioEngine.playBGM('./assets/audio/menu.mp3');
 
-        // 2. Configurar Efeitos Sonoros (SFX) nos botões
+        // --- LÓGICA DO CHANGELOG (NOVO) ---
+        const logOverlay = document.getElementById('changelog-overlay');
+        const btnLog = document.getElementById('btn-changelog');
+        const btnCloseLog = document.getElementById('btn-close-log');
+
+        btnLog.addEventListener('click', () => {
+            logOverlay.classList.remove('hidden');
+            AudioEngine.playSFX('hover.mp3');
+        });
+
+        btnCloseLog.addEventListener('click', () => {
+            logOverlay.classList.add('hidden');
+            AudioEngine.playSFX('confirm.mp3');
+        });
+
+        // Fecha ao clicar fora do modal
+        logOverlay.addEventListener('click', (e) => {
+            if (e.target === logOverlay) {
+                logOverlay.classList.add('hidden');
+            }
+        });
+        // ----------------------------------
+
+        // --- LÓGICA DE LOGIN ---
+        const btnLogin = document.getElementById('btn-login');
+        const btnLogout = document.getElementById('btn-logout');
+        const userInfo = document.getElementById('user-info');
+
+        document.getElementById('btn-shop').addEventListener('click', () => {
+            Router.navigate('shop');
+        });
+        
+        // Verifica se já está logado
+        Firebase.onUserChange(async (user) => {
+            if (user) {
+                this.currentUser = user;
+                btnLogin.classList.add('hidden');
+                userInfo.classList.remove('hidden');
+                
+                document.getElementById('user-avatar').src = user.photoURL;
+                document.getElementById('user-name').innerText = user.displayName.split(' ')[0]; 
+                
+                // Busca dinheiro
+                const data = await Firebase.getUserData(user.uid);
+                if (data) {
+                    document.getElementById('user-money').innerText = `¥ ${data.money}`;
+                }
+            } else {
+                this.currentUser = null;
+                btnLogin.classList.remove('hidden');
+                userInfo.classList.add('hidden');
+            }
+        });
+
+        btnLogin.addEventListener('click', async () => {
+            await Firebase.login();
+        });
+
+        btnLogout.addEventListener('click', async () => {
+            await Firebase.logout();
+        });
+        // -----------------------
+
         const buttons = document.querySelectorAll('.btn-primary');
-
         buttons.forEach(btn => {
-            btn.addEventListener('mouseenter', () => {
-                AudioEngine.playSFX('hover.mp3');
-            });
-
-            btn.addEventListener('click', () => {
-                AudioEngine.playSFX('confirm.mp3');
-            });
+            btn.addEventListener('mouseenter', () => AudioEngine.playSFX('hover.mp3'));
+            btn.addEventListener('click', () => AudioEngine.playSFX('confirm.mp3'));
         });
 
-        // 3. Configurar Navegação
-        document.getElementById('btn-play').addEventListener('click', () => {
-            Router.navigate('charSelect'); // Mudou aqui
-        });
+        document.getElementById('btn-play').addEventListener('click', () => Router.navigate('charSelect'));
+        document.getElementById('btn-tutorial').addEventListener('click', () => Router.navigate('tutorial'));
+        document.getElementById('btn-ranking').addEventListener('click', () => Router.navigate('ranking'));
+        document.getElementById('btn-options').addEventListener('click', () => Router.navigate('options'));
 
-        document.getElementById('btn-tutorial').addEventListener('click', () => {
-            Router.navigate('tutorial');
-        });
-
-        document.getElementById('btn-ranking').addEventListener('click', () => {
-            Router.navigate('ranking');
-        });
-
-        document.getElementById('btn-options').addEventListener('click', () => {
-            Router.navigate('options');
-        });
-
-        // 4. Adiciona ouvinte de teclado (usando a referência fixa)
         document.addEventListener('keydown', this.handleInputBound);
     }
 
-    handleInput(e) {
-        // Se você quiser atalhos no menu (ex: Enter para Play), coloque aqui.
-        // O atalho 'E' para editor eu removi daqui para evitar conflitos, 
-        // já que agora ele fica na tela de Seleção.
-        
-        /* Exemplo:
-        if (e.key === 'Enter') {
-            Router.navigate('select');
-        }
-        */
-    }
+    handleInput(e) {}
 
     destroy() {
-        // --- CORREÇÃO CRÍTICA ---
-        // Remove o evento de teclado ao sair da tela.
-        // Isso impede que apertar teclas no jogo ative coisas do menu.
         document.removeEventListener('keydown', this.handleInputBound);
     }
 }

@@ -1,24 +1,21 @@
 import AudioEngine from './audioEngine.js';
 
 export default class NoteSpawner {
-    constructor(chartId, gameInstance, speed, mods) {
+    constructor(chartId, gameInstance, speed, mods, skin) {
         this.chartId = chartId;
         this.game = gameInstance;
-        
-        // Recebe os mods
         this.mods = mods || { auto: false, sudden: false, speedUp: false };
+        
+        // --- SKIN ---
+        this.skin = skin || 'note_default';
 
         this.chartNotes = [];
         this.activeNotes = [];
         
-        // --- LÓGICA DO SPEED UP ---
-        // Se speedUp estiver ativo, reduz o tempo de queda (fica mais rápido)
+        // Speed Up Mod
         let baseSpeed = speed || 1.3;
-        if (this.mods.speedUp) {
-            baseSpeed = baseSpeed * 0.7; // 30% mais rápido
-        }
+        if (this.mods.speedUp) baseSpeed = baseSpeed * 0.7;
         this.noteSpeed = baseSpeed;
-        // --------------------------
         
         this.hitWindow = 0.15;
         this.perfectWindow = 0.05;
@@ -133,7 +130,6 @@ export default class NoteSpawner {
             const noteObj = this.activeNotes[i];
             const targetTime = noteObj.data.realTime; 
 
-            // --- AUTO PLAY ---
             if (this.mods.auto) {
                 if (!noteObj.data.hit && currentTime >= targetTime) {
                     this.checkHit(noteObj.data.lane, true);
@@ -164,7 +160,12 @@ export default class NoteSpawner {
                 const progress = 1 - (timeUntilHit / this.noteSpeed);
                 const y = progress * this.hitLineY;
 
+                // Verifica se é a skin de círculo para manter a centralização
+            if (this.skin === 'note_circle') {
+                noteObj.el.style.transform = `translate3d(-50%, ${y}px, 0)`;
+            } else {
                 noteObj.el.style.transform = `translate3d(0, ${y}px, 0)`;
+            }
 
                 if (timeUntilHit < -this.hitWindow && !noteObj.data.hit) {
                     this.handleMiss(i);
@@ -181,6 +182,12 @@ export default class NoteSpawner {
 
         const el = this.getNoteFromPool();
         
+        // --- APLICA A SKIN ---
+        if (this.skin !== 'note_default') {
+            el.classList.add(`skin-${this.skin}`);
+        }
+        // --------------------
+
         if (noteData.lane === 1 || noteData.lane === 2) el.classList.add('note-center');
         
         if (noteData.duration && noteData.duration > 0) {

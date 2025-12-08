@@ -1,0 +1,180 @@
+/* src/css/screens/shop.css */
+
+.shop-screen {
+    position: relative;
+    width: 100%; height: 100%;
+    display: flex; flex-direction: column; align-items: center;
+    overflow: hidden;
+}
+
+.shop-bg {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    background-image: url('../../../assets/images/menu_bg.png');
+    background-size: cover; background-position: center;
+    filter: blur(15px) brightness(0.3);
+    z-index: 0;
+}
+
+/* --- HEADER (Escopado) --- */
+.shop-screen .shop-header {
+    position: relative; z-index: 10;
+    width: 90%;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 30px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.shop-screen .shop-header h2 {
+    font-family: var(--font-display);
+    font-size: 3rem; color: white;
+    text-shadow: 0 0 20px var(--color-ryo);
+    letter-spacing: 5px;
+}
+
+.shop-screen .wallet-display {
+    background: rgba(0,0,0,0.6);
+    padding: 10px 25px;
+    border-radius: 30px;
+    border: 1px solid var(--color-nijika);
+    display: flex; flex-direction: column; align-items: flex-end;
+}
+
+.shop-screen .wallet-label {
+    font-family: var(--font-display); font-size: 0.8rem; color: #aaa;
+}
+
+.shop-screen .wallet-amount {
+    font-family: 'Courier New', monospace;
+    font-size: 1.5rem; font-weight: bold;
+    color: var(--color-nijika);
+    text-shadow: 0 0 10px var(--color-nijika);
+}
+
+/* --- CONTEÚDO (Escopado) --- */
+.shop-screen .shop-content {
+    position: relative; z-index: 10;
+    width: 90%; flex: 1;
+    display: flex; flex-direction: column;
+    padding-top: 20px;
+}
+
+.shop-screen .shop-tabs {
+    display: flex; gap: 20px; margin-bottom: 30px;
+}
+
+.shop-screen .tab-btn {
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.2);
+    color: #888;
+    font-family: var(--font-display);
+    font-size: 1.2rem;
+    padding: 10px 30px;
+    cursor: pointer;
+    transform: skewX(-10deg);
+    transition: all 0.2s;
+}
+
+.shop-screen .tab-btn:hover { color: white; border-color: white; }
+
+.shop-screen .tab-btn.active {
+    background: var(--color-bocchi);
+    color: white;
+    border-color: var(--color-bocchi);
+    box-shadow: 0 0 20px var(--color-bocchi);
+}
+
+/* --- GRID DE ITENS --- */
+.shop-screen .items-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 30px;
+    overflow-y: auto;
+    padding-right: 10px;
+    padding-bottom: 20px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-ryo) transparent;
+}
+
+.shop-screen .item-card {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 10px;
+    padding: 20px;
+    display: flex; flex-direction: column;
+    transition: transform 0.2s;
+}
+
+.shop-screen .item-card:hover {
+    transform: translateY(-5px);
+    background: rgba(255,255,255,0.08);
+    border-color: rgba(255,255,255,0.3);
+}
+
+.shop-screen .item-card.equipped-card {
+    border-color: var(--color-nijika);
+    box-shadow: 0 0 15px rgba(242, 214, 75, 0.1);
+}
+
+.shop-screen .item-img {
+    height: 120px;
+    background: rgba(0,0,0,0.3);
+    border-radius: 5px;
+    margin-bottom: 15px;
+    display: flex; align-items: center; justify-content: center;
+}
+
+.shop-screen .item-img img { max-width: 80%; max-height: 80%; }
+
+.shop-screen .item-info h3 {
+    font-family: var(--font-display);
+    color: white; font-size: 1.2rem; margin-bottom: 5px;
+}
+
+.shop-screen .item-info p {
+    font-family: var(--font-body);
+    color: #aaa; font-size: 0.8rem; margin-bottom: 15px;
+    height: 40px;
+}
+
+.shop-screen .shop-btn {
+    width: 100%;
+    padding: 10px;
+    font-family: var(--font-display);
+    font-weight: bold;
+    cursor: pointer;
+    border: none;
+    border-radius: 5px;
+    transition: 0.2s;
+}
+
+.shop-screen .shop-btn.buy { background: var(--color-ryo); color: white; }
+.shop-screen .shop-btn.buy:hover { filter: brightness(1.2); }
+.shop-screen .shop-btn.buy:disabled { background: #444; color: #888; cursor: not-allowed; }
+
+.shop-screen .shop-btn.equip { background: transparent; border: 1px solid white; color: white; }
+.shop-screen .shop-btn.equip:hover { background: white; color: black; }
+
+.shop-screen .shop-btn.equipped { background: var(--color-nijika); color: black; cursor: default; }
+
+/* --- FOOTER ESPECÍFICO DA LOJA --- */
+/* Aqui usamos .shop-screen para garantir que só afete a loja */
+.shop-screen .footer-controls {
+    position: relative; /* Na loja é relativo, nas outras telas é absolute */
+    z-index: 10;
+    width: 90%; 
+    padding: 20px 0;
+    display: flex;
+    justify-content: flex-start; /* Botão voltar na esquerda */
+}
+
+/* Mensagem Overlay */
+.msg-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.8); z-index: 100;
+    display: flex; align-items: center; justify-content: center;
+}
+.msg-box {
+    background: #222; border: 1px solid white; padding: 30px 50px;
+    font-family: var(--font-display); color: white; font-size: 1.5rem;
+}
+.hidden { display: none !important; }

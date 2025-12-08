@@ -299,3 +299,35 @@
     display: block;
     transform: skewX(10deg); 
 }
+
+/* --- RECOMPENSA EM DINHEIRO --- */
+.money-reward {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px dashed rgba(255, 255, 255, 0.2);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    animation: moneySlide 0.5s ease-out 0.5s forwards; /* Delay para aparecer depois */
+    opacity: 0;
+    transform: translateY(10px);
+}
+
+@keyframes moneySlide {
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.money-label {
+    font-family: var(--font-display);
+    color: #aaa;
+    font-size: 1rem;
+    letter-spacing: 1px;
+}
+
+.money-value {
+    font-family: 'Courier New', monospace;
+    font-size: 2rem;
+    font-weight: bold;
+    color: var(--color-nijika); /* Amarelo */
+    text-shadow: 0 0 15px var(--color-nijika);
+}

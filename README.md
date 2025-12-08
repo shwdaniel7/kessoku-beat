@@ -15,7 +15,7 @@ architecture, performance, and visual polish.
 
   
 
-![Project Status](https://img.shields.io/badge/Status-Version_3.0.0-pink)
+![Project Status](https://img.shields.io/badge/Status-Version_4.0.0-pink)
 
 ![Tech](https://img.shields.io/badge/Tech-HTML5_|_CSS3_|_ES6+-blue)
 
@@ -29,6 +29,12 @@ architecture, performance, and visual polish.
   
 
 ## ✨ Features
+
+### 🆕 New in v4.0.0 (Economy Update)
+- **Kessoku Shop:** Earn Yen by playing and spend it on cosmetic upgrades.
+- **Cloud Save:** Login with Google to save your inventory, money, and high scores.
+- **Customization:** Buy and equip new Note Skins (Osu!, Guitar Pick) and Lane Skins (Starry Floor, Cyber Grid).
+- **Visual Juice:** Added particle explosions, lane beams, and screen effects for maximum impact.
 
 ### 🆕 New in v3.0.0 (Kessoku Assemble Update)
 - **Character System:** Choose your favorite member of Kessoku Band! Each character has unique voice lines, backgrounds, and gameplay buffs:
@@ -62,7 +68,6 @@ architecture, performance, and visual polish.
 - **Dynamic Audio:** Independent volume control (BGM/SFX) and interactive sound effects.
 - **Online Leaderboard (Arcade Mode):** Integrated with **Firebase Firestore** to save and display global high scores.
 
-  
 
 ------------------------------------------------------------------------
 

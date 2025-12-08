@@ -140,3 +140,295 @@
     color: #fff;
     box-shadow: 0 0 20px rgba(232, 108, 166, 0.4);
 }
+
+/* --- PERFIL DE USUÁRIO (V2.0) --- */
+.user-profile {
+    position: absolute;
+    top: 30px;
+    right: 40px;
+    z-index: 200;
+    font-family: var(--font-display);
+}
+
+/* Botão de Login (Estilo Neon) */
+.btn-login {
+    background: rgba(0, 0, 0, 0.6);
+    color: var(--color-bocchi);
+    border: 1px solid var(--color-bocchi);
+    padding: 12px 25px;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(5px);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    box-shadow: 0 0 10px rgba(232, 108, 166, 0.2);
+}
+
+.btn-login:hover {
+    background: var(--color-bocchi);
+    color: white;
+    box-shadow: 0 0 20px var(--color-bocchi);
+    transform: translateY(-2px);
+}
+
+/* Cartão de Perfil (Logado) */
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    background: linear-gradient(135deg, rgba(20, 20, 30, 0.9), rgba(10, 10, 15, 0.95));
+    padding: 10px 20px 10px 10px; /* Padding assimétrico para acomodar o avatar */
+    border-radius: 50px; /* Pílula completa */
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-left: 4px solid var(--color-bocchi); /* Detalhe na esquerda */
+    backdrop-filter: blur(10px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    
+    /* Animação de entrada */
+    animation: slideInTop 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@keyframes slideInTop {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Avatar com Anel */
+#user-avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    box-shadow: 0 0 15px var(--color-bocchi);
+    object-fit: cover;
+}
+
+/* Textos */
+.user-details {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    line-height: 1.2;
+}
+
+#user-name {
+    font-size: 1.1rem;
+    color: white;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+#user-money {
+    font-family: 'Courier New', monospace; /* Fonte técnica para números */
+    font-weight: bold;
+    font-size: 0.9rem;
+    color: var(--color-nijika); /* Amarelo Ouro */
+    text-shadow: 0 0 10px rgba(242, 214, 75, 0.4);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+/* Botão Logout (Discreto até passar o mouse) */
+.btn-logout {
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #aaa;
+    font-size: 0.7rem;
+    padding: 8px 12px;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.2s;
+    margin-left: 10px;
+    font-family: var(--font-display);
+    letter-spacing: 1px;
+}
+
+.btn-logout:hover {
+    border-color: #ff4444;
+    color: #ff4444;
+    background: rgba(255, 0, 0, 0.1);
+    box-shadow: 0 0 15px rgba(255, 0, 0, 0.2);
+}
+
+.hidden { display: none !important; }
+
+
+/* --- VERSION TAG --- */
+.version-tag {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    font-family: var(--font-display);
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 1rem;
+    cursor: pointer;
+    z-index: 100;
+    transition: all 0.3s;
+    border: 1px solid transparent;
+    padding: 5px 10px;
+    border-radius: 5px;
+}
+
+.version-tag:hover {
+    color: var(--color-bocchi);
+    border-color: var(--color-bocchi);
+    background: rgba(0,0,0,0.5);
+    text-shadow: 0 0 10px var(--color-bocchi);
+}
+
+/* --- MODAL GENÉRICO (PATCH NOTES) --- */
+.modal-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    /* Fundo escuro mas transparente para ver o menu atrás */
+    background: rgba(0, 0, 0, 0.85); 
+    backdrop-filter: blur(8px); /* Blur mais forte para focar no texto */
+    z-index: 9999 !important; /* Garante que fique acima de TUDO, inclusive do título */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.2s ease-out;
+}
+
+.modal-panel {
+    background: linear-gradient(135deg, rgba(20, 20, 30, 0.95), rgba(10, 10, 15, 0.98));
+    border: 1px solid var(--color-bocchi); /* Borda Rosa */
+    width: 600px;
+    /* Limita a altura para 70% da tela, forçando o scroll se passar disso */
+    max-height: 70vh; 
+    border-radius: 15px;
+    box-shadow: 0 0 50px rgba(232, 108, 166, 0.15);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden; /* Garante que nada saia das bordas redondas */
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 30px;
+    background: rgba(255, 255, 255, 0.03);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    flex-shrink: 0; /* Impede o cabeçalho de encolher */
+}
+
+.modal-header h3 {
+    font-family: var(--font-display);
+    color: white;
+    margin: 0;
+    font-size: 1.5rem;
+    letter-spacing: 2px;
+    text-shadow: 0 0 10px var(--color-bocchi);
+}
+
+#btn-close-log {
+    background: none;
+    border: none;
+    color: #aaa;
+    font-size: 2rem;
+    cursor: pointer;
+    line-height: 1;
+    transition: color 0.2s;
+}
+#btn-close-log:hover { color: white; text-shadow: 0 0 10px white; }
+
+/* Área de Conteúdo com Scroll */
+.modal-content {
+    padding: 30px;
+    overflow-y: auto; /* Ativa o scroll vertical */
+    flex: 1; /* Ocupa todo o espaço restante */
+}
+
+/* --- SCROLLBAR CUSTOMIZADA (Fica muito mais bonito) --- */
+.modal-content::-webkit-scrollbar {
+    width: 8px;
+}
+.modal-content::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.3);
+}
+.modal-content::-webkit-scrollbar-thumb {
+    background: var(--color-bocchi);
+    border-radius: 4px;
+}
+.modal-content::-webkit-scrollbar-thumb:hover {
+    background: #ff99cc;
+}
+
+/* --- ESTILO DOS ITENS DO LOG --- */
+.changelog-item {
+    margin-bottom: 35px;
+    position: relative;
+    padding-left: 20px;
+    border-left: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Bolinha na linha do tempo */
+.changelog-item::before {
+    content: '';
+    position: absolute;
+    left: -6px; top: 0;
+    width: 10px; height: 10px;
+    background: var(--color-bocchi);
+    border-radius: 50%;
+    box-shadow: 0 0 10px var(--color-bocchi);
+}
+
+.log-header {
+    display: flex;
+    align-items: baseline;
+    gap: 15px;
+    margin-bottom: 8px;
+}
+
+.log-version {
+    font-family: var(--font-display);
+    color: var(--color-bocchi);
+    font-size: 1.4rem;
+}
+
+.log-date {
+    font-family: var(--font-body);
+    color: #666;
+    font-size: 0.85rem;
+    font-weight: bold;
+}
+
+.log-title {
+    font-family: var(--font-display);
+    color: white;
+    font-size: 1.1rem;
+    margin-bottom: 15px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    opacity: 0.9;
+}
+
+.log-list {
+    list-style: none;
+    padding: 0;
+}
+
+.log-list li {
+    font-family: var(--font-body);
+    color: #ccc;
+    font-size: 0.95rem;
+    margin-bottom: 8px;
+    line-height: 1.5;
+    display: flex;
+    align-items: flex-start;
+}
+
+/* Ícone antes de cada item */
+.log-list li::before {
+    content: '•';
+    color: var(--color-ryo);
+    margin-right: 10px;
+    font-weight: bold;
+}
+
+.hidden { display: none !important; }
